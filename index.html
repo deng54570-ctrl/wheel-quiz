@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#141a26">
+<title>轮盘抽题</title>
+<style>
+  :root{
+    --bg:#141a26; --panel:#1e2636; --line:#2c3648;
+    --fg:#eef2f8; --dim:#93a0b5; --brand:#4f8cff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--fg); min-height:100vh;
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    padding:16px 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  h1{font-size:18px;font-weight:600;margin:6px 0 16px;letter-spacing:.5px}
+
+  /* 用 padding-bottom 撑成正方形，兼容不支持 aspect-ratio 的老微信内核 */
+  #stage{position:relative;width:100%;max-width:340px;height:0;padding-bottom:100%}
+  canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;border-radius:50%;
+         filter:drop-shadow(0 10px 26px rgba(0,0,0,.45))}
+  #pointer{
+    position:absolute;top:-4px;left:50%;transform:translateX(-50%);
+    width:0;height:0;z-index:2;
+    border-left:11px solid transparent;border-right:11px solid transparent;
+    border-top:22px solid #ff5a5f;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.55));
+  }
+
+  #spin{
+    margin-top:20px;width:100%;max-width:340px;
+    border:0;border-radius:14px;padding:15px 0;
+    font-size:17px;font-weight:700;color:#fff;letter-spacing:1px;
+    background:linear-gradient(180deg,#5a95ff,#3b74e0);
+    box-shadow:0 6px 18px rgba(59,116,224,.35);
+    cursor:pointer;transition:transform .08s,opacity .2s;
+  }
+  #spin:disabled{opacity:.5;box-shadow:none;cursor:default}
+  #spin:active:not(:disabled){transform:translateY(1px)}
+
+  #hint{color:var(--dim);font-size:13px;margin-top:10px;text-align:center;min-height:20px}
+
+  #card{
+    width:100%;max-width:340px;margin-top:18px;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:16px;display:none;
+  }
+  #card.show{display:block;animation:pop .28s ease-out}
+  @keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .tag{
+    display:inline-block;font-size:12px;color:#bcd0ff;
+    background:rgba(79,140,255,.16);border:1px solid rgba(79,140,255,.35);
+    border-radius:999px;padding:2px 10px;margin-bottom:12px;
+  }
+  .q{font-size:17px;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+  .opts{list-style:none;padding:0;margin:12px 0 0}
+  .opts li{
+    padding:9px 12px;margin-top:8px;font-size:15px;line-height:1.6;
+    border:1px solid var(--line);border-radius:10px;
+    background:rgba(255,255,255,.03);word-break:break-word;
+  }
+  .opts li b{color:#8fb4ff;margin-right:6px;font-weight:700}
+  .src{
+    margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);
+    font-size:12px;color:var(--dim);letter-spacing:.3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>轮盘抽题</h1>
+
+<div id="stage">
+  <div id="pointer"></div>
+  <canvas id="wheel"></canvas>
+</div>
+
+<button id="spin">开始抽题</button>
+<div id="hint">点一下转盘开始</div>
+<div id="card"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =====================================================================
+     题库：想换题只改下面这一个数组，其它代码都不用动。
+     格式：
+       { name: '分类名', questions: [ ... ] }
+     questions 里每一项可以是：
+       1) 直接写题干字符串：      '中国的首都是哪里？'
+       2) 写成对象（带选项）：    { q: '题干', options: ['选项A', '选项B', '选项C', '选项D'] }
+     分类名会显示在转盘的扇区上，建议 4～8 个分类、名字别超过 8 个字。
+     ===================================================================== */
+  /* ==== BANK_START ==== */
+  var BANK = [
+    { name: '名解·语言学', questions: [
+      { q: 'Minimal pair（最小对立对）', src: '2000 · 620；2012 · 语言学' },
+      { q: 'allophones（音位变体）', src: '2000 · 620' },
+      { q: 'assimilation（同化）', src: '2000 · 620；2010 · 623' },
+      { q: 'acronyms（首字母缩略词）', src: '2000 · 620' },
+      { q: 'bound morphemes（黏着语素）', src: '2000 · 620' },
+      { q: 'cohesion（衔接）', src: '2000／2002 · 620' },
+      { q: 'coherence（连贯）', src: '2000／2003 · 620；2012 · 语言学' },
+      { q: 'polysemy（一词多义）', src: '2000／2002 · 620' },
+      { q: 'hyponymy（上下义关系）', src: '2000／2002／2003 · 620' },
+      { q: 'The cooperative principle（合作原则）', src: '2000 · 620' },
+      { q: 'diphthong（双元音）', src: '2001 · 620' },
+      { q: 'pitch（音高）', src: '2001／2002 · 620' },
+      { q: 'lateral（边音）', src: '2001 · 620' },
+      { q: 'subject（主语）', src: '2001 · 620' },
+      { q: 'logographic（语标文字／表意文字）', src: '2001 · 620' },
+      { q: 'compounding（复合法构词）', src: '2001 · 620' },
+      { q: 'suprasegmental phonology（超音段音系学）', src: '2001 · 620' },
+      { q: 'entailment（蕴涵）', src: '2001 · 620；2013 · 623' },
+      { q: 'code switching（语码转换）', src: '2001 · 620' },
+      { q: 'presupposition（预设）', src: '2001／2002 · 620' },
+      { q: 'displacement（位移性）', src: '2002 · 620' },
+      { q: 'duality（双重性）', src: '2002 · 620' },
+      { q: 'synchronic study（共时研究）', src: '2002 · 620' },
+      { q: 'deep structure（深层结构）', src: '2002 · 620' },
+      { q: 'homonymy（同音／同形异义关系）', src: '2002 · 620' },
+      { q: 'phonology（音系学）', src: '2003 · 620' },
+      { q: 'morpheme（语素）', src: '2003 · 620' },
+      { q: 'dialect（方言）', src: '2003 · 620' },
+      { q: 'co-articulation（协同发音）', src: '2003 · 620' },
+      { q: 'syntax（句法学）', src: '2003 · 620' },
+      { q: 'blending（混成法构词）', src: '2003 · 620' },
+      { q: 'aphasia（失语症）', src: '2003 · 620' },
+      { q: 'interlanguage（中介语）', src: '2003 · 620' },
+      { q: 'reflective meaning（反射意义）', src: '2010 · 623' },
+      { q: 'fossilization（僵化现象）', src: '2010 · 623' },
+      { q: 'critical discourse analysis（批评性话语分析）', src: '2010 · 623' },
+      { q: 'backformation（逆构词法）', src: '2010 · 623' },
+      { q: 'diglossia（双言制）', src: '2010 · 623' },
+      { q: 'productivity（能产性）', src: '2010 · 623' },
+      { q: 'deixis（指示语）', src: '2010 · 623' },
+      { q: 'liaison（连音）', src: '2010 · 623' },
+      { q: 'reference（指称）', src: '2013 · 623' },
+      { q: 'script（脚本）', src: '2013 · 623' },
+      { q: 'semantic field（语义场）', src: '2013 · 623' },
+      { q: 'iconicity（象似性）', src: '2013 · 623' },
+      { q: 'bilingualism（双语现象）', src: '2013 · 623' },
+      { q: 'field independence（场独立性）', src: '2013 · 623' },
+      { q: 'illocution（言外行为）', src: '2013 · 623' },
+      { q: 'garden path sentence（花园幽径句）', src: '2013 · 623' },
+      { q: 'register（语域）', src: '2013 · 623' },
+      { q: '社会语言学（sociolinguistics）', src: '2023 · 622' },
+      { q: '语义学（semantics）', src: '2023 · 622' },
+      { q: '预设（presupposition）', src: '2023 · 622' },
+      { q: '语域（register）', src: '2024 · 622' },
+      { q: '关键期（critical period）', src: '2024 · 622' },
+      { q: '概念意义（conceptual meaning）', src: '2024 · 622' },
+      { q: '音位（phoneme）', src: '2025 · 622' },
+      { q: '话语分析（discourse analysis）', src: '2025 · 622' },
+      { q: '应用语言学（applied linguistics）', src: '2025 · 622' },
+      { q: '语用策略（pragmatic strategy）', src: '2025 · 622' },
+      { q: '语言规范（language norms／standardization）', src: '2025 · 622' },
+      { q: '面子（face）', src: '2026 · 622' },
+      { q: '语言僵化（fossilization）', src: '2026 · 622' },
+      { q: 'articulatory phonetics（发音语音学）', src: '2012 · 语言学' },
+      { q: 'proposition（命题）', src: '2012 · 语言学' },
+      { q: 'context（语境）', src: '2012 · 语言学' },
+      { q: 'implicature（会话含义）', src: '2012 · 语言学' },
+      { q: 'argument structure（论元结构）', src: '2012 · 语言学' },
+      { q: 'paradigmatic（聚合关系）', src: '2012 · 语言学' },
+      { q: 'recursiveness（递归性）', src: '2012 · 语言学' },
+      { q: '能指和所指', src: '2019 · 南师大623' },
+    ]},
+    { name: '名解·文学', questions: [
+      { q: '荷马史诗', src: '2023 · 622' },
+      { q: '文艺复兴', src: '2023 · 622' },
+      { q: '让-雅克·卢梭', src: '2023 · 622' },
+      { q: '托马斯·斯特尔纳斯·艾略特（T. S. Eliot）', src: '2023 · 622' },
+      { q: '堂吉诃德', src: '2024 · 622' },
+      { q: '《恰尔德·哈洛尔德游记》', src: '2024 · 622' },
+      { q: '意识流小说', src: '2024 · 622' },
+      { q: '后现代主义文学', src: '2024 · 622' },
+      { q: '埃斯库罗斯', src: '2024 · 622' },
+      { q: '贝奥武夫', src: '2025 · 622' },
+      { q: '中世纪', src: '2025 · 622' },
+      { q: '川端康成', src: '2025 · 622' },
+      { q: '科技小说', src: '2025 · 622' },
+      { q: '日本俳句文学', src: '2026 · 622' },
+      { q: '骑士文学', src: '2026 · 622' },
+      { q: 'Sentimentalism（感伤主义）', src: '2002 · 618 英美文学史' },
+      { q: 'Point of View（叙述视角）', src: '2002 · 618 英美文学史' },
+      { q: 'Stream of Consciousness（意识流）', src: '2002／2005／2009 · 618 英美文学史' },
+      { q: 'Transcendentalism（超验主义）', src: '2002 · 618 英美文学史' },
+      { q: 'Naturalism（自然主义）', src: '2002／2003 · 618 英美文学史' },
+      { q: 'Black Humor（黑色幽默）', src: '2002／2005／2009 · 618 英美文学史' },
+      { q: 'Romanticism（浪漫主义）', src: '2003 · 618 英美文学史' },
+      { q: 'Lake School（湖畔派）', src: '2003 · 618 英美文学史' },
+      { q: 'The Renaissance（文艺复兴）', src: '2003 · 618 英美文学史' },
+      { q: 'Metafiction（元小说）', src: '2003 · 618 英美文学史' },
+      { q: 'The morality play（道德剧）', src: '2005／2009 · 618 英美文学史' },
+      { q: 'Angry young men（愤怒的青年）', src: '2005／2009 · 618 英美文学史' },
+      { q: 'Walden（《瓦尔登湖》）', src: '2005／2009 · 618 英美文学史' },
+      { q: 'Lost Generation（迷惘的一代）', src: '2005／2009 · 618 英美文学史；2013 · 上外文学' },
+      { q: 'Three Unities（三一律）', src: '2006 · 618 英美文学史' },
+      { q: 'Vanity Fair（《名利场》）', src: '2006 · 618 英美文学史' },
+      { q: 'Pilgrim\'s Progress（《天路历程》）', src: '2006 · 618 英美文学史' },
+      { q: 'Frankenstein（《弗兰肯斯坦》）', src: '2006 · 618 英美文学史' },
+      { q: 'Leaves of Grass（《草叶集》）', src: '2006 · 618 英美文学史' },
+      { q: 'Free Verse（自由诗体）', src: '2006 · 618 英美文学史' },
+      { q: 'art for art\'s sake（为艺术而艺术）', src: '2008 · 618 英美文学史' },
+      { q: 'New England Transcendentalism（新英格兰超验主义）', src: '2008 · 618 英美文学史' },
+      { q: 'Black Humour（黑色幽默）', src: '2008 · 618 英美文学史' },
+      { q: 'the Angry Young Man（愤怒的青年）', src: '2008 · 618 英美文学史' },
+      { q: 'the Harlem Renaissance（哈莱姆文艺复兴）', src: '2008 · 618 英美文学史' },
+      { q: 'epistolary novels in English literature（英国文学中的书信体小说）', src: '2011 · 英美文学' },
+      { q: 'Leatherstocking Tales（《皮袜子故事集》）', src: '2011 · 英美文学；2015 · 618 英美文学史' },
+      { q: 'James Joyce（詹姆斯·乔伊斯）', src: '2011 · 英美文学' },
+      { q: 'unity of effect（统一效果论）', src: '2011 · 英美文学' },
+      { q: 'Metaphysical poets（玄学派诗人）', src: '2011 · 英美文学' },
+      { q: 'muckraking（黑幕揭发运动）', src: '2011 · 英美文学' },
+      { q: 'Lyrical Ballads（《抒情歌谣集》）', src: '2013 · 上外文学' },
+      { q: 'humanism（人文主义）', src: '2013 · 上外文学' },
+      { q: 'Spenserian stanza（斯宾塞诗节）', src: '2013 · 上外文学' },
+      { q: 'Winesburg, Ohio（《俄亥俄州瓦恩斯堡镇》）', src: '2013 · 上外文学' },
+      { q: 'Darwinism（达尔文主义）', src: '2013 · 上外文学' },
+      { q: 'lake poets（湖畔派诗人）', src: '2014 · 618 英美文学史' },
+      { q: 'Classicism（古典主义）', src: '2014 · 618 英美文学史' },
+      { q: 'Puritanism（清教主义）', src: '2014 · 618 英美文学史' },
+      { q: 'Heart of Darkness（《黑暗之心》）', src: '2014 · 618 英美文学史' },
+      { q: 'Beloved（《宠儿》）', src: '2014 · 618 英美文学史' },
+      { q: 'the Norman Conquest（诺曼征服）', src: '2015 · 618 英美文学史' },
+      { q: 'Sir John Falstaff（约翰·福斯塔夫爵士）', src: '2015 · 618 英美文学史' },
+      { q: 'Gothic novel（哥特小说）', src: '2015 · 618 英美文学史' },
+      { q: 'American naturalism（美国自然主义）', src: '2015 · 618 英美文学史' },
+      { q: 'Allen Ginsberg（艾伦·金斯堡）', src: '2015 · 618 英美文学史' },
+      { q: '复调小说', src: '2019 · 南师大623' },
+      { q: '叙述视角', src: '2019 · 南师大623' },
+      { q: '互文性', src: '2019 · 南师大623' },
+    ]},
+    { name: '名解·翻译', questions: [
+      { q: '规范责任', src: '2023 · 622' },
+      { q: '文化滤镜', src: '2023 · 622' },
+      { q: '切斯特曼的翻译策略观', src: '2023 · 622 ／ 2024 · 622' },
+      { q: '意译', src: '2025 · 622' },
+      { q: '文本扁平化', src: '2026 · 622' },
+    ]},
+    { name: '问答·语言学', questions: [
+      { q: '描述语音时常用的一般术语有哪些？(a) 声带相互靠拢时；(b) 声带分开时，分别怎么描述？', src: '2000 · 620' },
+      { q: '结合你的语言学知识，谈谈语言与思维（mentality）之间的关系。', src: '2000 · 620' },
+      { q: '你认为在课堂上教儿童第二语言是否值得？如果是，儿童班与成人班在教学方法与途径上可能有何不同？', src: '2000 · 620' },
+      { q: '以下四题选三题各写一篇：① 索绪尔对现代语言学的重大贡献；② 布龙菲尔德结构主义的主要观点；③ 交际法在外语教学中的适用性；④ 语言与文化的相互依存关系。', src: '2001 · 620' },
+      { q: '结合布龙菲尔德对行为主义的坚持，论述他对「意义」（meaning）的理解。', src: '2002 · 620' },
+      { q: '既然人们的审美信念各不相同，为什么还会使用同一个词「beauty」（美）？', src: '2002 · 620' },
+      { q: '概括萨丕尔（Edward Sapir）「语言是社会现实的向导」这段论述的观点，并作简要评论。', src: '2002 · 620' },
+      { q: '以下三题选两题各写一篇：① 选择两种「语法」（types of grammar）谈谈你对它们的了解；② 谈谈你对语义特征（semantic features）的了解；③ 说说你对语言学产生兴趣的原因。', src: '2003 · 620' },
+      { q: '作为上海世博会志愿者，你在服务中是如何体现语言能力（competence）与语言表现（performance）的？', src: '2010 · 623' },
+      { q: '从「囧」字的历史义到如今意思的变迁，你如何从语言学角度分析这一现象？', src: '2010 · 623' },
+      { q: '第一语言习得与第二语言习得有哪些相同点和区别？', src: '2010 · 623' },
+      { q: '论述语言的任意性（arbitrariness）。', src: '2010 · 623' },
+      { q: '谈谈语言与思维（language and thought）的关系，你的观点是什么？', src: '2010 · 623' },
+      { q: '塞尔（Searle）所区分的五类言外行为（illocutionary speech acts）分别是什么？', src: '2013 · 623' },
+      { q: '论述「意义」（meaning）在句子建构中的作用。', src: '2013 · 623' },
+      { q: '联系语用学，谈谈它在外语教学和翻译中的作用。', src: '2013 · 623' },
+      { q: '阅读给定的两个语篇，讨论它们是否连贯，并进一步阐述语篇衔接（cohesion）与连贯（coherence）的关系。', src: '2023 · 622' },
+      { q: '母语习得与二语习得有哪些共性和差异？请举出 5 个影响外语学习的因素并具体说明。', src: '2023 · 622' },
+      { q: '举例说明合作原则（Cooperative Principle）。', src: '2024 · 622' },
+      { q: '阐述衔接（cohesion）与连贯（coherence）的关系。', src: '2024 · 622' },
+      { q: '语域（register）是什么？请举例说明语域理论对外语学习或研究的影响。', src: '2025 · 622' },
+      { q: '人工智能对外语学习和研究有什么影响？', src: '2025 · 622' },
+      { q: '语用学与语义学（两者的区别与联系）。', src: '2026 · 622' },
+      { q: '社会语言学：文化与语言、社会之间的关系。', src: '2026 · 622' },
+      { q: '简述大语言模型在语言实际运用中的作用与利弊。', src: '2026 · 622' },
+      { q: '从语言与文化的角度，谈谈 Emily 的一首诗表达了什么。', src: '2012 · 语言学' },
+      { q: '论述机器翻译（machine translation）与人工翻译哪个更好。', src: '2012 · 语言学' },
+      { q: '论述意义的形成（the formation of meaning）。', src: '2012 · 语言学' },
+      { q: '谈谈交际教学法（communicative teaching approach）。', src: '2012 · 语言学' },
+      { q: '举例说明语言系统的组合关系与聚合关系。', src: '2019 · 南师大623' },
+      { q: '请根据你的语言学知识积累，尝试给「语篇」（text）下一个定义。', src: '2019 · 南师大623' },
+    ]},
+    { name: '问答·文学', questions: [
+      { q: '什么是唯美主义？如何评价唯美主义者「为艺术而艺术」的主张？你如何看待艺术家的使命？', src: '2023 · 622' },
+      { q: '现代主义作家普遍表现出形式创新的冲动。典型的现代主义技法有哪些？这些形式创新与哲学、自然科学的新观念是否存在关联？又如何更有效地表现 20 世纪上半叶剧变的社会现实与个体经验？请结合作家作品举例说明。', src: '2023 · 622' },
+      { q: '如何理解波德莱尔的《恶之花》？如何理解第二章对城市的描写？', src: '2024 · 622' },
+      { q: '东方文学和世界文学的关系，以及东方文学在世界文学中的地位。', src: '2024 · 622' },
+      { q: '谈一谈你对 19 世纪初浪漫主义诗人拜伦及其作品的理解。', src: '2025 · 622' },
+      { q: '卡夫卡是西方现代主义文学的先驱和大师。他在《城堡》中描写了主人公的困境，为什么说卡夫卡写出了全体现代人的困境？请结合《城堡》分析说明。', src: '2025 · 622' },
+      { q: '美国边疆文学塑造了美国特色，美国西部边疆独具特色，也塑造了美国人的性格。请结合具体作品说明。', src: '2026 · 622' },
+      { q: '简析什么是外部文学和内部文学。', src: '2026 · 622' },
+      { q: '你如何看待莎士比亚（Shakespeare）的语言？', src: '2002 · 618 英美文学史' },
+      { q: '为什么说《大卫·科波菲尔》（David Copperfield）是作者所处时代社会的一幅广阔画卷？', src: '2002 · 618 英美文学史' },
+      { q: '请比较美国早期浪漫主义与高峰浪漫主义（high romantics）。', src: '2002 · 618 英美文学史' },
+      { q: '美国南方文学有哪些独特特征？', src: '2002 · 618 英美文学史' },
+      { q: '说明弗吉尼亚·伍尔夫（Virginia Woolf）与詹姆斯·乔伊斯（James Joyce）为何是运用意识流（stream of consciousness）的大师。', src: '2002 · 618 英美文学史' },
+      { q: '举一两个例子，说明为何司各特·菲茨杰拉德（Scott Fitzgerald）的《了不起的盖茨比》（The Great Gatsby）是美国小说中对所谓「美国梦」（American Dream）最深刻的评注。', src: '2002 · 618 英美文学史' },
+      { q: '托马斯·哈代（Thomas Hardy）《德伯家的苔丝》（Tess of the D\'Urbervilles）中的苔丝（Tess）是怎样一个人物形象？', src: '2003 · 618 英美文学史' },
+      { q: '现代主义（modernism）有哪些特征？', src: '2003 · 618 英美文学史' },
+      { q: '清教传统（puritan heritage）如何塑造了纳撒尼尔·霍桑（Nathaniel Hawthorne）对人及人生的看法？', src: '2003 · 618 英美文学史' },
+      { q: '文学批评家为何常用「窗」或「镜」的比喻来描述文学现实主义（literary realism）？', src: '2003 · 618 英美文学史' },
+      { q: '你如何理解 J. D. 塞林格（J. D. Salinger）《麦田里的守望者》（The Catcher in the Rye）的主人公霍尔顿·考尔菲尔德（Holden Caulfield）？', src: '2003 · 618 英美文学史' },
+      { q: '论述《弃儿汤姆·琼斯的历史》（The History of Tom Jones, a Foundling）的意义及其作者在英国小说发展中的地位。', src: '2003 · 618 英美文学史' },
+      { q: '分析詹姆斯·乔伊斯（James Joyce）的《尤利西斯》（Ulysses）。', src: '2003 · 618 英美文学史' },
+      { q: '海明威（Ernest Hemingway）曾说：「所有现代美国文学都源自马克·吐温（Mark Twain）的一本书——《哈克贝利·费恩历险记》（Huckleberry Finn）。」请评论这一说法。', src: '2003 · 618 英美文学史' },
+      { q: '评论库尔特·冯内古特（Kurt Vonnegut）时，洛丽·摩尔（Lorrie Moore）曾在书评中写道：「他是后现代的马克·吐温：暴躁而感伤，滑稽而虔诚。」那么，你如何理解作为后现代马克·吐温的库尔特·冯内古特？', src: '2003 · 618 英美文学史' },
+      { q: '简要论述塞缪尔·理查逊（Samuel Richardson）笔下克拉丽莎（Clarissa）的性格。', src: '2005／2009 · 618 英美文学史' },
+      { q: '《呼啸山庄》（Wuthering Heights）如何体现哥特小说（Gothic Novels）传统？', src: '2005／2009 · 618 英美文学史' },
+      { q: '评述欧内斯特·海明威（Ernest Hemingway）的「冰山理论」（iceberg theory）写作。', src: '2005／2009 · 618 英美文学史' },
+      { q: '评述简·奥斯汀（Jane Austen）对文学的贡献。', src: '2006 · 618 英美文学史' },
+      { q: '请分析埃德加·爱伦·坡（Edgar Allan Poe）小说的特征。', src: '2006 · 618 英美文学史' },
+      { q: '请评述《动物庄园》（Animal Farm）的艺术特色及其在英国文学中的地位。', src: '2006 · 618 英美文学史' },
+      { q: '评述乔伊斯·欧茨（Joyce Carol Oates）对美国文学的贡献。', src: '2006 · 618 英美文学史' },
+      { q: '美国文学中有哪些主要的自然主义小说家？请至少列举三位。并论述美国自然主义的主要特征，简要指出自然主义者（naturalists）、现实主义者（realists）与浪漫主义者（romanticists）之间的主要区别。', src: '2008 · 618 英美文学史' },
+      { q: '论述菲茨杰拉德（F. Scott Fitzgerald）《了不起的盖茨比》（The Great Gatsby）的主题。', src: '2008 · 618 英美文学史' },
+      { q: '评论笛福（Defoe）《鲁滨逊漂流记》（The Adventures of Robinson Crusoe）中鲁滨逊（Robinson Crusoe）的性格。', src: '2008 · 618 英美文学史' },
+      { q: '简要论述英国浪漫主义诗歌（British Romantic poetry）：至少提及 6 位主要诗人的名字，并说明其主要特征与成就，须用例子加以说明。', src: '2008 · 618 英美文学史' },
+      { q: '亨利·詹姆斯（Henry James）的写作手法有哪些？', src: '2010 · 文学' },
+      { q: '威廉·福克纳（William Faulkner）的创作手法有哪些？', src: '2010 · 文学' },
+      { q: '谈《空心人》（The Hollow Men）的读后感。', src: '2010 · 文学' },
+      { q: '分析《简·爱》（Jane Eyre）中的主人公。', src: '2010 · 文学' },
+      { q: '结合《雾都孤儿》（Oliver Twist）中的选段，分析狄更斯（Dickens）对孤儿院中男孩的刻画。', src: '2011 · 英美文学' },
+      { q: '分析雪莱（Shelley）诗歌《悲歌》（A Dirge）中意象（imagery）的运用效果。', src: '2011 · 英美文学' },
+      { q: '结合爱默生（Emerson）《论自助》（Self-Reliance）中的话，论述对超验主义（Transcendentalism）的理解。', src: '2011 · 英美文学' },
+      { q: '分析《了不起的盖茨比》（The Great Gatsby）中盖茨比的作息表（SCHEDULE）的文化意义及其与小说主题的关系。', src: '2011 · 英美文学' },
+      { q: '分析《等待戈多》（Waiting for Godot）第一幕中出现的靴子（boot）以及人物对话的象征意义。', src: '2013 · 上外文学' },
+      { q: '结合《天路历程》（The Pilgrim\'s Progress），分析《名利场》（Vanity Fair）中贝基·夏普（Becky Sharp）的人物塑造以及小说的主题。', src: '2013 · 上外文学' },
+      { q: '《黑人谈河流》（The Negro Speaks of Rivers）中黑人（Negro）与古老的河流（ancient river）分别象征什么？这首诗对哈莱姆文艺复兴（Harlem Renaissance）有何作用？', src: '2013 · 上外文学' },
+      { q: '结合田纳西·威廉斯（Tennessee Williams）的写作风格与主题，分析《欲望号街车》（A Streetcar Named Desire）的主题。', src: '2013 · 上外文学' },
+      { q: '分析乔叟（Chaucer）对英语语言（the English language）的贡献。', src: '2014 · 618 英美文学史' },
+      { q: '分析华兹华斯（Wordsworth）的诗歌《我心雀跃》（My Heart Leaps Up）。', src: '2014 · 618 英美文学史' },
+      { q: '谈谈你对现代短篇小说（modernized short stories）的看法，并举一个短篇小说的例子，说明其对人物心理的复杂分析。', src: '2014 · 618 英美文学史' },
+      { q: '分析艾伦·金斯堡（Allen Ginsberg）的《加利福尼亚超市》（A Supermarket in California）。', src: '2014 · 618 英美文学史' },
+      { q: '英国浪漫主义（British romanticism）的特征是什么？结合两个例子加以说明。', src: '2015 · 618 英美文学史' },
+      { q: '评论 W. B. 叶芝（Yeats）的墓志铭：「Cast a cold eye / On life, on death / A horseman passes」。', src: '2015 · 618 英美文学史' },
+      { q: '亨利·詹姆斯（Henry James）的「国际主题」（international theme）是如何实现的？分析《贵妇人画像》（A Portrait of a Lady）的女主人公。', src: '2015 · 618 英美文学史' },
+      { q: '后现代主义（post-modernism）的特征是什么？分析《五号屠场》（Slaughterhouse-Five）这部作品，并说明它如何契合后现代主义。', src: '2015 · 618 英美文学史' },
+      { q: '简述村上春树的创作特色。', src: '2019 · 南师大623' },
+    ]},
+    { name: '问答·翻译', questions: [
+      { q: '从文化差异的角度简要评述「中国英语」（Chinese English）现象。', src: '2000 · 620' },
+      { q: '安德鲁·切斯特曼认为，翻译是一种受制于规范的行为方式，且可以对其策略加以描述。请简述这一观点。', src: '2023 · 622' },
+      { q: '模因论（memetics）与翻译的关系。', src: '2024 · 622' },
+      { q: '什么是不可译性？用超模因（super-meme）来解释不可译性。', src: '2025 · 622' },
+    ]}
+  ];
+/* ==== BANK_END ==== */
+
+  /* ===================== 配色 ===================== */
+  var PALETTE = ['#4f8cff','#38bdf8','#34d399','#fbbf24','#fb7185','#a78bfa','#f472b6','#22d3ee'];
+
+  /* ===================== 元素 ===================== */
+  var canvas  = document.getElementById('wheel');
+  var ctx     = canvas.getContext('2d');
+  var spinBtn = document.getElementById('spin');
+  var cardEl  = document.getElementById('card');
+  var hintEl  = document.getElementById('hint');
+
+  /* ===================== 状态 ===================== */
+  var rotation = 0;          // 当前转盘角度（弧度）
+  var spinning = false;
+  var size = 0, R = 0, dpr = 1;
+  var pools = {};            // 每个分类的剩余题目池（抽完一轮自动重置）
+
+  function categories() {
+    return BANK.filter(function (c) { return c && c.questions && c.questions.length; });
+  }
+
+  /* ===================== 绘制 ===================== */
+  function resize() {
+    dpr  = Math.min(window.devicePixelRatio || 1, 3);
+    size = canvas.clientWidth || 320;
+    canvas.width  = Math.round(size * dpr);
+    canvas.height = Math.round(size * dpr);
+    draw();
+  }
+
+  function clip(str, max) {
+    str = String(str);
+    return str.length > max ? str.slice(0, max - 1) + '…' : str;
+  }
+
+  function draw() {
+    if (!size) return;
+    var list = categories();
+    var n    = Math.max(list.length, 1);
+    var seg  = Math.PI * 2 / n;
+    var cx = size / 2, cy = size / 2;
+    R = size / 2 - 4;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size, size);
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rotation);
+
+    for (var i = 0; i < n; i++) {
+      var a0 = -Math.PI / 2 + i * seg;
+      var a1 = a0 + seg;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, R, a0, a1);
+      ctx.closePath();
+      ctx.fillStyle = PALETTE[i % PALETTE.length];
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(20,26,38,.5)';
+      ctx.stroke();
+
+      if (list.length) {
+        ctx.save();
+        ctx.rotate(a0 + seg / 2);
+        var fs = Math.max(11, Math.min(15, R * 0.115));
+        ctx.font = '700 ' + fs.toFixed(1) + 'px -apple-system,"PingFang SC",Arial,sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#0b1220';
+        ctx.fillText(clip(list[i].name, Math.max(4, Math.floor((R * 0.68) / fs))), R - 13, 0);
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+
+    // 中心圆
+    var hub = Math.max(24, R * 0.18);
+    ctx.beginPath();
+    ctx.arc(cx, cy, hub, 0, Math.PI * 2);
+    ctx.fillStyle = '#141a26';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#2c3648';
+    ctx.stroke();
+
+    ctx.fillStyle = '#93a0b5';
+    ctx.font = '600 ' + Math.max(11, R * 0.1).toFixed(1) + 'px -apple-system,"PingFang SC",Arial,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('抽题', cx, cy);
+  }
+
+  /* ===================== 抽题 ===================== */
+  function pickQuestion(cat) {
+    var pool = pools[cat.name];
+    if (!pool || !pool.length) {
+      pool = cat.questions.map(function (_, i) { return i; });
+      for (var i = pool.length - 1; i > 0; i--) {           // 洗牌
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+      }
+      pools[cat.name] = pool;
+    }
+    return cat.questions[pool.pop()];
+  }
+
+  function renderResult(cat) {
+    var raw = pickQuestion(cat);
+    var q   = (typeof raw === 'string') ? { q: raw } : raw;
+
+    cardEl.innerHTML = '';
+
+    var tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = '本题来自：' + cat.name;
+    cardEl.appendChild(tag);
+
+    var body = document.createElement('div');
+    body.className = 'q';
+    body.textContent = q.q || '';
+    cardEl.appendChild(body);
+
+    if (Object.prototype.toString.call(q.options) === '[object Array]' && q.options.length) {
+      var ol = document.createElement('ol');
+      ol.className = 'opts';
+      q.options.forEach(function (opt, i) {
+        var li = document.createElement('li');
+        var b  = document.createElement('b');
+        b.textContent = String.fromCharCode(65 + i) + '.';
+        li.appendChild(b);
+        li.appendChild(document.createTextNode(opt));
+        ol.appendChild(li);
+      });
+      cardEl.appendChild(ol);
+    }
+
+    if (q.src) {
+      var srcEl = document.createElement('div');
+      srcEl.className = 'src';
+      srcEl.textContent = '真题来源：' + q.src;
+      cardEl.appendChild(srcEl);
+    }
+
+    cardEl.classList.add('show');
+    try { cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  }
+
+  /* ===================== 旋转 ===================== */
+  function spin() {
+    if (spinning) return;
+
+    var list = categories();
+    if (!list.length) {
+      hintEl.textContent = '题库是空的，先往 BANK 里加题';
+      return;
+    }
+
+    spinning = true;
+    spinBtn.disabled = true;
+    cardEl.classList.remove('show');
+    hintEl.textContent = '转盘转起来了…';
+
+    var n      = list.length;
+    var seg    = Math.PI * 2 / n;
+    var winner = Math.floor(Math.random() * n);
+
+    // 让「中奖扇区」停在顶部指针处，再加一点随机偏移，避免每次都正对中线
+    var jitter = (Math.random() - 0.5) * seg * 0.6;
+    var target = ((-winner * seg - seg / 2 - jitter) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    var cur    = ((rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    var delta  = target - cur;
+    if (delta < 0) delta += Math.PI * 2;
+
+    var turns = 5 + Math.floor(Math.random() * 3);
+    var from  = rotation;
+    var to    = rotation + turns * Math.PI * 2 + delta;
+    var dur   = 4000 + Math.random() * 800;
+    var t0    = 0;
+
+    function step(now) {
+      if (!t0) t0 = now;
+      var p = Math.min(1, (now - t0) / dur);
+      var e = 1 - Math.pow(1 - p, 3);          // easeOutCubic
+      rotation = from + (to - from) * e;
+      draw();
+
+      if (p < 1) {
+        requestAnimationFrame(step);
+      } else {
+        spinning = false;
+        spinBtn.disabled = false;
+        spinBtn.textContent = '再抽一次';
+        hintEl.textContent = '点一下转盘再抽一次';
+        renderResult(list[winner]);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ===================== 事件 ===================== */
+  spinBtn.addEventListener('click', spin);
+  canvas.addEventListener('click', spin);
+  window.addEventListener('resize', function () { resize(); });
+  window.addEventListener('orientationchange', function () { setTimeout(resize, 120); });
+
+  resize();
+})();
+</script>
+</body>
+</html>
