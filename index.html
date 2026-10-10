@@ -636,19 +636,47 @@
 
   /* ===================== 音效（Web Audio 合成，不依赖任何音频文件）===== */
   var Sound = (function () {
-    var ctx = null, muted = false;
+    var ctx = null, master = null, muted = false;
+    var VOLUME = 2.2;          // 总音量倍数：比原来的 0.07 增益响约 8 倍
+
     function ac() {
       if (!ctx) {
         var C = window.AudioContext || window.webkitAudioContext;
         if (!C) return null;
         try { ctx = new C(); } catch (e) { return null; }
+
+        // 主音量 + 压缩器：既够响，又不会削波爆音
+        master = ctx.createGain();
+        master.gain.value = VOLUME;
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -18;
+        comp.knee.value = 30;
+        comp.ratio.value = 12;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.22;
+
+        // 柔和限幅：把峰值压进 ±1，避免小号声爆音
+        var shaper = ctx.createWaveShaper();
+        var N = 1024, curve = new Float32Array(N), KNEE = 0.7;
+        for (var i = 0; i < N; i++) {
+          var x = (i / (N - 1)) * 2 - 1, a = Math.abs(x);
+          curve[i] = a <= KNEE ? x
+            : (x < 0 ? -1 : 1) * (KNEE + (1 - KNEE) * Math.tanh((a - KNEE) / (1 - KNEE)));
+        }
+        shaper.curve = curve;
+        shaper.oversample = '2x';
+
+        master.connect(comp);
+        comp.connect(shaper);
+        shaper.connect(ctx.destination);
       }
       if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
       return ctx;
     }
+
     function tone(o) {
       if (muted) return;
-      var c = ac(); if (!c) return;
+      var c = ac(); if (!c || !master) return;
       var t0 = c.currentTime + (o.delay || 0);
       var dur = o.dur || 0.15;
       var osc = c.createOscillator(), g = c.createGain();
@@ -656,56 +684,69 @@
       osc.frequency.setValueAtTime(o.freq, t0);
       if (o.to) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.to), t0 + dur);
       g.gain.setValueAtTime(0.0001, t0);
-      g.gain.linearRampToValueAtTime(o.gain || 0.18, t0 + 0.012);
+      g.gain.linearRampToValueAtTime(o.gain || 0.3, t0 + 0.012);
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      osc.connect(g); g.connect(c.destination);
+      osc.connect(g); g.connect(master);
       osc.start(t0); osc.stop(t0 + dur + 0.04);
     }
+
     function noise(o) {
       if (muted) return;
-      var c = ac(); if (!c) return;
+      var c = ac(); if (!c || !master) return;
       var t0 = c.currentTime + (o.delay || 0);
       var dur = o.dur || 0.25;
       var len = Math.max(1, Math.floor(c.sampleRate * dur));
       var buf = c.createBuffer(1, len, c.sampleRate);
       var d = buf.getChannelData(0);
-      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, o.decay || 2.5);
+      for (var i = 0; i < len; i++) {
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, o.decay || 2.5);
+      }
       var src = c.createBufferSource(); src.buffer = buf;
       var f = c.createBiquadFilter();
       f.type = o.filter || 'bandpass';
       f.frequency.value = o.freq || 1200;
       f.Q.value = 0.8;
-      var g = c.createGain(); g.gain.value = o.gain || 0.28;
-      src.connect(f); f.connect(g); g.connect(c.destination);
+      var g = c.createGain(); g.gain.value = o.gain || 0.4;
+      src.connect(f); f.connect(g); g.connect(master);
       src.start(t0);
     }
+
     return {
       unlock: function () { ac(); },
+      /* 解锁确认音：让用户知道他点对了、声音也在 */
+      ding: function () {
+        tone({ freq: 880, dur: 0.16, type: 'sine', gain: 0.32 });
+        tone({ freq: 1320, dur: 0.22, type: 'sine', gain: 0.20, delay: 0.06 });
+      },
       turn: function () {
-        for (var i = 0; i < 5; i++) {
-          tone({ freq: 1000 + i * 55, dur: 0.045, type: 'square', gain: 0.07, delay: i * 0.115 });
-          noise({ dur: 0.03, freq: 2600, gain: 0.10, delay: i * 0.115, decay: 5 });
+        for (var i = 0; i < 6; i++) {
+          tone({ freq: 1150 + i * 60, dur: 0.075, type: 'square', gain: 0.26, delay: i * 0.11 });
+          noise({ dur: 0.055, freq: 2800, gain: 0.30, delay: i * 0.11, decay: 5 });
         }
       },
-      drop: function () { tone({ freq: 340, to: 110, dur: 0.30, type: 'sine', gain: 0.20 }); },
+      drop: function () {
+        tone({ freq: 420, to: 130, dur: 0.35, type: 'sine', gain: 0.55 });
+        noise({ dur: 0.12, freq: 500, gain: 0.25, decay: 3 });
+      },
       bounce: function (p) {
-        tone({ freq: 170 + p * 300, to: 90, dur: 0.085, type: 'triangle', gain: 0.13 });
-        noise({ dur: 0.05, freq: 900, gain: 0.07, decay: 4 });
+        tone({ freq: 190 + p * 320, to: 95, dur: 0.13, type: 'triangle', gain: 0.45 });
+        noise({ dur: 0.07, freq: 1100, gain: 0.22, decay: 4 });
       },
       rumble: function () {
-        for (var i = 0; i < 9; i++) {
-          noise({ dur: 0.05, freq: 2200 + Math.random() * 1400, gain: 0.10, delay: i * 0.075, decay: 5 });
+        for (var i = 0; i < 11; i++) {
+          noise({ dur: 0.06, freq: 2400 + Math.random() * 1600, gain: 0.26, delay: i * 0.072, decay: 5 });
         }
-        tone({ freq: 120, to: 210, dur: 0.7, type: 'sawtooth', gain: 0.05 });
+        tone({ freq: 130, to: 240, dur: 0.78, type: 'sawtooth', gain: 0.20 });
       },
       pop: function () {
-        noise({ dur: 0.35, freq: 800, gain: 0.55, filter: 'lowpass', decay: 3.2 });
-        tone({ freq: 620, to: 1900, dur: 0.20, type: 'square', gain: 0.13 });
+        noise({ dur: 0.40, freq: 900, gain: 1.0, filter: 'lowpass', decay: 3.0 });
+        tone({ freq: 680, to: 2100, dur: 0.24, type: 'square', gain: 0.34 });
+        tone({ freq: 90, to: 45, dur: 0.30, type: 'sine', gain: 0.5 });
       },
       fanfare: function () {
         [523.25, 659.25, 783.99, 1046.50].forEach(function (f, i) {
-          tone({ freq: f, dur: 0.38, type: 'triangle', gain: 0.17, delay: i * 0.10 });
-          tone({ freq: f * 2, dur: 0.30, type: 'sine', gain: 0.06, delay: i * 0.10 });
+          tone({ freq: f, dur: 0.48, type: 'triangle', gain: 0.40, delay: i * 0.11 });
+          tone({ freq: f * 2, dur: 0.38, type: 'sine', gain: 0.16, delay: i * 0.11 });
         });
       },
       setMuted: function (v) { muted = v; },
@@ -966,10 +1007,17 @@
     Sound.setMuted(m);
     muteEl.textContent = m ? '🔇' : '🔊';
     muteEl.classList.toggle('off', m);
+    if (!m) Sound.ding();          // 开音效时响一声，方便确认
   });
 
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden) Sound.unlock();
+  });
+
+  // 首次任意触摸/点击就解锁音频（iOS 必须由用户手势触发）
+  ['touchstart', 'pointerdown', 'click'].forEach(function (ev) {
+    document.addEventListener(ev, function () { Sound.unlock(); },
+                            { once: true, passive: true });
   });
 
   buildChips();
