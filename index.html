@@ -5,56 +5,184 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#141a26">
-<title>轮盘抽题</title>
+<meta name="theme-color" content="#0f1220">
+<title>扭蛋抽题</title>
 <style>
   :root{
-    --bg:#141a26; --panel:#1e2636; --line:#2c3648;
-    --fg:#eef2f8; --dim:#93a0b5; --brand:#4f8cff;
+    --bg1:#131a2e; --bg2:#0b0e1a;
+    --panel:#1e2636; --line:#2c3648;
+    --fg:#eef2f8; --dim:#93a0b5;
+    --metal1:#f2f5fb; --metal2:#9aa8bf; --metal3:#5b6880;
+    --machine1:#e8484f; --machine2:#b3272e; --machine3:#7d161b;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0}
   body{
-    background:var(--bg); color:var(--fg); min-height:100vh;
+    background:radial-gradient(120% 80% at 50% 0%, var(--bg1) 0%, var(--bg2) 70%);
+    color:var(--fg); min-height:100vh;
     font:16px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
     display:flex; flex-direction:column; align-items:center;
-    padding:16px 16px calc(28px + env(safe-area-inset-bottom));
+    padding:14px 16px calc(26px + env(safe-area-inset-bottom));
+    overflow-x:hidden;
   }
-  h1{font-size:18px;font-weight:600;margin:6px 0 16px;letter-spacing:.5px}
+  h1{font-size:19px;font-weight:700;margin:4px 0 12px;letter-spacing:1px;
+     background:linear-gradient(180deg,#fff,#9fb4d8);-webkit-background-clip:text;
+     background-clip:text;color:transparent}
 
-  /* 用 padding-bottom 撑成正方形，兼容不支持 aspect-ratio 的老微信内核 */
-  #stage{position:relative;width:100%;max-width:340px;height:0;padding-bottom:100%}
-  canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;border-radius:50%;
-         filter:drop-shadow(0 10px 26px rgba(0,0,0,.45))}
-  #pointer{
-    position:absolute;top:-4px;left:50%;transform:translateX(-50%);
-    width:0;height:0;z-index:2;
-    border-left:11px solid transparent;border-right:11px solid transparent;
-    border-top:22px solid #ff5a5f;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,.55));
+  /* ── 抽题范围 ── */
+  .chips{display:flex;gap:6px;width:100%;max-width:360px;overflow-x:auto;
+         padding:2px 2px 10px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:0 0 auto;border:1px solid var(--line);background:rgba(255,255,255,.04);
+    color:var(--dim);font-size:12.5px;padding:6px 12px;border-radius:999px;
+    white-space:nowrap;cursor:pointer;transition:all .18s;
+    font-family:inherit;
+  }
+  .chip.on{background:rgba(79,140,255,.18);border-color:rgba(79,140,255,.55);
+           color:#cfe0ff;font-weight:600}
+
+  /* ── 扭蛋机 ── */
+  .machine{position:relative;width:260px;margin:2px auto 0;user-select:none}
+
+  .dome{
+    position:relative;width:196px;height:196px;margin:0 auto -26px;border-radius:50%;
+    background:
+      radial-gradient(circle at 34% 26%, rgba(255,255,255,.42), rgba(255,255,255,.06) 42%, transparent 62%),
+      radial-gradient(circle at 50% 50%, rgba(120,190,255,.16), rgba(40,60,110,.30));
+    border:3px solid rgba(210,232,255,.55);
+    box-shadow:inset 0 -14px 32px rgba(0,0,0,.45),
+               inset 0 10px 26px rgba(255,255,255,.18),
+               0 10px 30px rgba(0,0,0,.5);
+    overflow:hidden;
+  }
+  .balls{position:absolute;inset:0}
+  .balls span{position:absolute;border-radius:50%;
+              box-shadow:inset -3px -4px 7px rgba(0,0,0,.35),
+                         inset 3px 3px 6px rgba(255,255,255,.45)}
+  .dome.jiggle .balls{animation:jig .5s linear 2}
+  @keyframes jig{
+    0%,100%{transform:translate(0,0)}
+    25%{transform:translate(-2.5px,1.5px) rotate(-1.2deg)}
+    75%{transform:translate(2.5px,-1.5px) rotate(1.2deg)}
   }
 
-  #spin{
-    margin-top:20px;width:100%;max-width:340px;
-    border:0;border-radius:14px;padding:15px 0;
-    font-size:17px;font-weight:700;color:#fff;letter-spacing:1px;
-    background:linear-gradient(180deg,#5a95ff,#3b74e0);
-    box-shadow:0 6px 18px rgba(59,116,224,.35);
-    cursor:pointer;transition:transform .08s,opacity .2s;
+  .body{
+    position:relative;width:260px;height:150px;border-radius:20px 20px 24px 24px;
+    background:linear-gradient(180deg,var(--machine1),var(--machine2) 55%,var(--machine3));
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.35),
+               inset 0 -10px 22px rgba(0,0,0,.45),
+               0 14px 30px rgba(0,0,0,.5);
   }
-  #spin:disabled{opacity:.5;box-shadow:none;cursor:default}
-  #spin:active:not(:disabled){transform:translateY(1px)}
+  .body::after{
+    content:'';position:absolute;left:12px;right:12px;top:8px;height:5px;border-radius:4px;
+    background:rgba(255,255,255,.28);
+  }
 
-  #hint{color:var(--dim);font-size:13px;margin-top:10px;text-align:center;min-height:20px}
+  /* 旋钮 */
+  .knob{
+    position:absolute;left:50%;top:16px;margin-left:-34px;
+    width:68px;height:68px;border:0;padding:0;border-radius:50%;cursor:pointer;
+    background:radial-gradient(circle at 36% 30%, var(--metal1), var(--metal2) 52%, var(--metal3));
+    box-shadow:0 6px 14px rgba(0,0,0,.5), inset 0 -3px 8px rgba(0,0,0,.35),
+               inset 0 3px 6px rgba(255,255,255,.6);
+    transition:transform .65s cubic-bezier(.35,1.5,.5,1);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .knob:active{filter:brightness(1.08)}
+  .knob::before{
+    content:'';width:9px;height:34px;border-radius:5px;
+    background:linear-gradient(180deg,#4a5468,#2b3242);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.7);
+  }
+  .knob:disabled{cursor:default;filter:saturate(.6) brightness(.9)}
 
-  #card{
-    width:100%;max-width:340px;margin-top:18px;
+  /* 出蛋口 */
+  .chute{
+    position:absolute;left:50%;bottom:12px;margin-left:-52px;
+    width:104px;height:44px;border-radius:10px;
+    background:linear-gradient(180deg,#120d12,#241a20);
+    box-shadow:inset 0 8px 16px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.22);
+  }
+  .chute::after{
+    content:'';position:absolute;left:8px;right:8px;bottom:7px;height:4px;border-radius:3px;
+    background:rgba(255,255,255,.13);
+  }
+
+  /* ── 掉落区 ── */
+  .dropzone{position:relative;width:100%;max-width:360px;height:118px;margin-top:2px}
+  .tray{
+    position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+    width:150px;height:12px;border-radius:50%;
+    background:radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.22), rgba(255,255,255,.03) 70%);
+    box-shadow:0 6px 18px rgba(0,0,0,.45);
+  }
+
+  .capsule{
+    position:absolute;left:50%;top:0;width:58px;height:58px;
+    transform:translate(-50%,-52px);opacity:0;pointer-events:none;
+    filter:drop-shadow(0 8px 12px rgba(0,0,0,.5));
+  }
+  .capsule.show{opacity:1}
+  .cap-half{position:absolute;left:0;width:58px;height:29px;
+            transition:transform .5s ease-out, opacity .5s}
+  .capsule.noanim .cap-half{transition:none}
+  .cap-top{top:0;border-radius:29px 29px 4px 4px;
+           background:linear-gradient(180deg,rgba(255,255,255,.55),transparent),var(--c1)}
+  .cap-bot{bottom:0;border-radius:4px 4px 29px 29px;
+           background:linear-gradient(0deg,rgba(0,0,0,.25),transparent),var(--c2)}
+  .capsule::after{
+    content:'';position:absolute;left:4px;right:4px;top:26px;height:6px;
+    background:linear-gradient(180deg,rgba(0,0,0,.28),rgba(255,255,255,.25));
+    border-radius:3px;
+  }
+  .capsule.shake{animation:cshake .09s linear infinite}
+  @keyframes cshake{
+    0%{transform:translate(-50%,74px) rotate(-3deg)}
+    50%{transform:translate(-50%,72px) rotate(3deg)}
+    100%{transform:translate(-50%,74px) rotate(-3deg)}
+  }
+  .capsule.burst .cap-top{transform:translate(-44px,-52px) rotate(-42deg);opacity:0}
+  .capsule.burst .cap-bot{transform:translate(44px,52px) rotate(42deg);opacity:0}
+  .capsule.burst::after{opacity:0;transition:opacity .2s}
+
+  /* 闪光 */
+  .flash{
+    position:absolute;left:50%;top:74px;width:20px;height:20px;margin:-10px 0 0 -10px;
+    border-radius:50%;background:radial-gradient(circle,#fff,rgba(255,255,255,0) 65%);
+    opacity:0;pointer-events:none;
+  }
+  .flash.go{animation:flash .62s ease-out}
+  @keyframes flash{
+    0%{opacity:0;transform:scale(.3)}
+    22%{opacity:1;transform:scale(3.4)}
+    100%{opacity:0;transform:scale(9)}
+  }
+
+  /* 彩带 */
+  .confetti{position:absolute;left:50%;top:74px;width:0;height:0;pointer-events:none}
+  .confetti i{
+    position:absolute;left:0;top:0;width:8px;height:12px;border-radius:2px;
+    animation:fly .95s cubic-bezier(.2,.7,.4,1) forwards;
+  }
+  @keyframes fly{
+    0%{transform:translate(-50%,-50%) rotate(0) scale(.4);opacity:1}
+    100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--rot)) scale(1);opacity:0}
+  }
+
+  /* ── 提示 & 题目卡 ── */
+  .hint{color:var(--dim);font-size:13px;text-align:center;min-height:20px;margin-top:4px}
+
+  .card{
+    width:100%;max-width:360px;margin-top:14px;
     background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:16px;display:none;
   }
-  #card.show{display:block;animation:pop .28s ease-out}
-  @keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-
+  .card.show{display:block;animation:pop .42s cubic-bezier(.2,1.4,.5,1)}
+  @keyframes pop{
+    0%{opacity:0;transform:translateY(26px) scale(.9)}
+    100%{opacity:1;transform:none}
+  }
   .tag{
     display:inline-block;font-size:12px;color:#bcd0ff;
     background:rgba(79,140,255,.16);border:1px solid rgba(79,140,255,.35);
@@ -68,24 +196,47 @@
     background:rgba(255,255,255,.03);word-break:break-word;
   }
   .opts li b{color:#8fb4ff;margin-right:6px;font-weight:700}
-  .src{
-    margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);
-    font-size:12px;color:var(--dim);letter-spacing:.3px;
+  .src{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);
+       font-size:12px;color:var(--dim);letter-spacing:.3px}
+
+  /* 音效开关 */
+  .mute{
+    position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:9;
+    width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+    background:rgba(30,38,54,.85);color:var(--dim);font-size:16px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
   }
+  .mute.off{color:#ff8b8b}
 </style>
 </head>
 <body>
 
-<h1>轮盘抽题</h1>
+<div class="mute" id="mute" title="音效开关">🔊</div>
 
-<div id="stage">
-  <div id="pointer"></div>
-  <canvas id="wheel"></canvas>
+<h1>扭蛋抽题</h1>
+
+<div class="chips" id="chips"></div>
+
+<div class="machine">
+  <div class="dome" id="dome"><div class="balls" id="balls"></div></div>
+  <div class="body">
+    <button class="knob" id="knob" aria-label="转动旋钮抽题"></button>
+    <div class="chute"></div>
+  </div>
 </div>
 
-<button id="spin">开始抽题</button>
-<div id="hint">点一下转盘开始</div>
-<div id="card"></div>
+<div class="dropzone">
+  <div class="tray"></div>
+  <div class="flash" id="flash"></div>
+  <div class="confetti" id="confetti"></div>
+  <div class="capsule" id="capsule">
+    <span class="cap-half cap-top"></span>
+    <span class="cap-half cap-bot"></span>
+  </div>
+</div>
+
+<div class="hint" id="hint">转动旋钮，抽一颗扭蛋</div>
+<div class="card" id="card"></div>
 
 <script>
 (function () {
@@ -97,8 +248,8 @@
        { name: '分类名', questions: [ ... ] }
      questions 里每一项可以是：
        1) 直接写题干字符串：      '中国的首都是哪里？'
-       2) 写成对象（带选项）：    { q: '题干', options: ['选项A', '选项B', '选项C', '选项D'] }
-     分类名会显示在转盘的扇区上，建议 4～8 个分类、名字别超过 8 个字。
+       2) 写成对象：              { q: '题干', src: '来源', options: ['A选项','B选项'] }
+     分类名会显示成可以点的「抽题范围」按钮。
      ===================================================================== */
   /* ==== BANK_START ==== */
   var BANK = [
@@ -483,123 +634,176 @@
   ];
 /* ==== BANK_END ==== */
 
-  /* ===================== 配色 ===================== */
-  var PALETTE = ['#4f8cff','#38bdf8','#34d399','#fbbf24','#fb7185','#a78bfa','#f472b6','#22d3ee'];
+  /* ===================== 音效（Web Audio 合成，不依赖任何音频文件）===== */
+  var Sound = (function () {
+    var ctx = null, muted = false;
+    function ac() {
+      if (!ctx) {
+        var C = window.AudioContext || window.webkitAudioContext;
+        if (!C) return null;
+        try { ctx = new C(); } catch (e) { return null; }
+      }
+      if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+      return ctx;
+    }
+    function tone(o) {
+      if (muted) return;
+      var c = ac(); if (!c) return;
+      var t0 = c.currentTime + (o.delay || 0);
+      var dur = o.dur || 0.15;
+      var osc = c.createOscillator(), g = c.createGain();
+      osc.type = o.type || 'sine';
+      osc.frequency.setValueAtTime(o.freq, t0);
+      if (o.to) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.to), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(o.gain || 0.18, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g); g.connect(c.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.04);
+    }
+    function noise(o) {
+      if (muted) return;
+      var c = ac(); if (!c) return;
+      var t0 = c.currentTime + (o.delay || 0);
+      var dur = o.dur || 0.25;
+      var len = Math.max(1, Math.floor(c.sampleRate * dur));
+      var buf = c.createBuffer(1, len, c.sampleRate);
+      var d = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, o.decay || 2.5);
+      var src = c.createBufferSource(); src.buffer = buf;
+      var f = c.createBiquadFilter();
+      f.type = o.filter || 'bandpass';
+      f.frequency.value = o.freq || 1200;
+      f.Q.value = 0.8;
+      var g = c.createGain(); g.gain.value = o.gain || 0.28;
+      src.connect(f); f.connect(g); g.connect(c.destination);
+      src.start(t0);
+    }
+    return {
+      unlock: function () { ac(); },
+      turn: function () {
+        for (var i = 0; i < 5; i++) {
+          tone({ freq: 1000 + i * 55, dur: 0.045, type: 'square', gain: 0.07, delay: i * 0.115 });
+          noise({ dur: 0.03, freq: 2600, gain: 0.10, delay: i * 0.115, decay: 5 });
+        }
+      },
+      drop: function () { tone({ freq: 340, to: 110, dur: 0.30, type: 'sine', gain: 0.20 }); },
+      bounce: function (p) {
+        tone({ freq: 170 + p * 300, to: 90, dur: 0.085, type: 'triangle', gain: 0.13 });
+        noise({ dur: 0.05, freq: 900, gain: 0.07, decay: 4 });
+      },
+      rumble: function () {
+        for (var i = 0; i < 9; i++) {
+          noise({ dur: 0.05, freq: 2200 + Math.random() * 1400, gain: 0.10, delay: i * 0.075, decay: 5 });
+        }
+        tone({ freq: 120, to: 210, dur: 0.7, type: 'sawtooth', gain: 0.05 });
+      },
+      pop: function () {
+        noise({ dur: 0.35, freq: 800, gain: 0.55, filter: 'lowpass', decay: 3.2 });
+        tone({ freq: 620, to: 1900, dur: 0.20, type: 'square', gain: 0.13 });
+      },
+      fanfare: function () {
+        [523.25, 659.25, 783.99, 1046.50].forEach(function (f, i) {
+          tone({ freq: f, dur: 0.38, type: 'triangle', gain: 0.17, delay: i * 0.10 });
+          tone({ freq: f * 2, dur: 0.30, type: 'sine', gain: 0.06, delay: i * 0.10 });
+        });
+      },
+      setMuted: function (v) { muted = v; },
+      isMuted: function () { return muted; }
+    };
+  })();
 
   /* ===================== 元素 ===================== */
-  var canvas  = document.getElementById('wheel');
-  var ctx     = canvas.getContext('2d');
-  var spinBtn = document.getElementById('spin');
-  var cardEl  = document.getElementById('card');
-  var hintEl  = document.getElementById('hint');
+  function $(id) { return document.getElementById(id); }
+  var knob = $('knob'), dome = $('dome'), ballsBox = $('balls');
+  var capsule = $('capsule'), flash = $('flash'), confettiBox = $('confetti');
+  var cardEl = $('card'), hintEl = $('hint'), chipsEl = $('chips'), muteEl = $('mute');
+
+  var CAP_COLORS = [
+    ['#ff6b6b', '#ffd166'], ['#4f8cff', '#a5d8ff'], ['#34d399', '#a7f3d0'],
+    ['#f472b6', '#fbcfe8'], ['#a78bfa', '#ddd6fe'], ['#22d3ee', '#cffafe'],
+    ['#fbbf24', '#fef3c7']
+  ];
 
   /* ===================== 状态 ===================== */
-  var rotation = 0;          // 当前转盘角度（弧度）
-  var spinning = false;
-  var size = 0, R = 0, dpr = 1;
-  var pools = {};            // 每个分类的剩余题目池（抽完一轮自动重置）
+  var selectedCat = null;      // null = 全部
+  var used = {};               // 一轮内不重复
+  var busy = false;
+  var pendingItem = null;
+  var lastCapColor = null;
+  var knobAngle = 0;           // 旋钮累加角度：每次往前转一整圈，不会回弹
 
-  function categories() {
-    return BANK.filter(function (c) { return c && c.questions && c.questions.length; });
-  }
-
-  /* ===================== 绘制 ===================== */
-  function resize() {
-    dpr  = Math.min(window.devicePixelRatio || 1, 3);
-    size = canvas.clientWidth || 320;
-    canvas.width  = Math.round(size * dpr);
-    canvas.height = Math.round(size * dpr);
-    draw();
-  }
-
-  function clip(str, max) {
-    str = String(str);
-    return str.length > max ? str.slice(0, max - 1) + '…' : str;
-  }
-
-  function draw() {
-    if (!size) return;
-    var list = categories();
-    var n    = Math.max(list.length, 1);
-    var seg  = Math.PI * 2 / n;
-    var cx = size / 2, cy = size / 2;
-    R = size / 2 - 4;
-
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, size, size);
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(rotation);
-
-    for (var i = 0; i < n; i++) {
-      var a0 = -Math.PI / 2 + i * seg;
-      var a1 = a0 + seg;
-
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.arc(0, 0, R, a0, a1);
-      ctx.closePath();
-      ctx.fillStyle = PALETTE[i % PALETTE.length];
-      ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = 'rgba(20,26,38,.5)';
-      ctx.stroke();
-
-      if (list.length) {
-        ctx.save();
-        ctx.rotate(a0 + seg / 2);
-        var fs = Math.max(11, Math.min(15, R * 0.115));
-        ctx.font = '700 ' + fs.toFixed(1) + 'px -apple-system,"PingFang SC",Arial,sans-serif';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#0b1220';
-        ctx.fillText(clip(list[i].name, Math.max(4, Math.floor((R * 0.68) / fs))), R - 13, 0);
-        ctx.restore();
-      }
+  /* ===================== 玻璃球里的小扭蛋 ===================== */
+  (function fillDome() {
+    var colors = ['#ff6b6b','#ffd166','#4f8cff','#34d399','#f472b6','#a78bfa','#22d3ee','#fb923c','#a3e635'];
+    for (var i = 0; i < 46; i++) {
+      var b = document.createElement('span');
+      var r = 8 + Math.random() * 8;
+      var ang = Math.random() * Math.PI * 2;
+      var rad = Math.sqrt(Math.random()) * 38;
+      b.style.width = b.style.height = (r * 2).toFixed(0) + 'px';
+      b.style.left = (50 + Math.cos(ang) * rad).toFixed(2) + '%';
+      b.style.top = (50 + Math.sin(ang) * rad).toFixed(2) + '%';
+      b.style.transform = 'translate(-50%,-50%)';
+      b.style.background = 'radial-gradient(circle at 34% 30%, rgba(255,255,255,.5), transparent 55%),' +
+                           colors[i % colors.length];
+      b.style.opacity = (0.75 + Math.random() * 0.25).toFixed(2);
+      ballsBox.appendChild(b);
     }
-    ctx.restore();
+  })();
 
-    // 中心圆
-    var hub = Math.max(24, R * 0.18);
-    ctx.beginPath();
-    ctx.arc(cx, cy, hub, 0, Math.PI * 2);
-    ctx.fillStyle = '#141a26';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#2c3648';
-    ctx.stroke();
-
-    ctx.fillStyle = '#93a0b5';
-    ctx.font = '600 ' + Math.max(11, R * 0.1).toFixed(1) + 'px -apple-system,"PingFang SC",Arial,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('抽题', cx, cy);
+  /* ===================== 抽题范围按钮 ===================== */
+  function buildChips() {
+    chipsEl.innerHTML = '';
+    var list = [{ name: '全部', val: null }];
+    BANK.forEach(function (c) { list.push({ name: c.name, val: c.name }); });
+    list.forEach(function (it) {
+      var b = document.createElement('button');
+      b.className = 'chip' + (it.val === selectedCat ? ' on' : '');
+      b.textContent = it.name;
+      b.onclick = function () {
+        selectedCat = it.val;
+        used = {};                       // 换范围就重新开始一轮
+        buildChips();
+      };
+      chipsEl.appendChild(b);
+    });
   }
 
-  /* ===================== 抽题 ===================== */
-  function pickQuestion(cat) {
-    var pool = pools[cat.name];
-    if (!pool || !pool.length) {
-      pool = cat.questions.map(function (_, i) { return i; });
-      for (var i = pool.length - 1; i > 0; i--) {           // 洗牌
-        var j = Math.floor(Math.random() * (i + 1));
-        var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
-      }
-      pools[cat.name] = pool;
-    }
-    return cat.questions[pool.pop()];
+  /* ===================== 候选池 & 抽一题 ===================== */
+  function candidates() {
+    var cats = selectedCat === null
+      ? BANK
+      : BANK.filter(function (c) { return c.name === selectedCat; });
+    var out = [];
+    cats.forEach(function (c) {
+      c.questions.forEach(function (q, i) {
+        out.push({ q: q, cat: c.name, key: c.name + '#' + i });
+      });
+    });
+    return out;
   }
 
-  function renderResult(cat) {
-    var raw = pickQuestion(cat);
-    var q   = (typeof raw === 'string') ? { q: raw } : raw;
+  function drawOne() {
+    var cands = candidates();
+    if (!cands.length) return null;
+    var fresh = cands.filter(function (x) { return !used[x.key]; });
+    if (!fresh.length) { used = {}; fresh = cands; }   // 抽满一轮才重置
+    var pick = fresh[Math.floor(Math.random() * fresh.length)];
+    used[pick.key] = 1;
+    return pick;
+  }
+
+  /* ===================== 卡片渲染 ===================== */
+  function renderResult(item) {
+    var raw = item.q;
+    var q = (typeof raw === 'string') ? { q: raw } : raw;
 
     cardEl.innerHTML = '';
 
     var tag = document.createElement('span');
     tag.className = 'tag';
-    tag.textContent = '本题来自：' + cat.name;
+    tag.textContent = '本题来自：' + item.cat;
     cardEl.appendChild(tag);
 
     var body = document.createElement('div');
@@ -612,7 +816,7 @@
       ol.className = 'opts';
       q.options.forEach(function (opt, i) {
         var li = document.createElement('li');
-        var b  = document.createElement('b');
+        var b = document.createElement('b');
         b.textContent = String.fromCharCode(65 + i) + '.';
         li.appendChild(b);
         li.appendChild(document.createTextNode(opt));
@@ -632,65 +836,143 @@
     try { cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
   }
 
-  /* ===================== 旋转 ===================== */
-  function spin() {
-    if (spinning) return;
-
-    var list = categories();
-    if (!list.length) {
-      hintEl.textContent = '题库是空的，先往 BANK 里加题';
-      return;
+  /* ===================== 彩带 & 闪光 ===================== */
+  function fireConfetti() {
+    var colors = ['#ff6b6b','#ffd166','#4f8cff','#34d399','#a78bfa','#f472b6','#22d3ee','#fb923c'];
+    for (var i = 0; i < 42; i++) {
+      (function (i) {
+        var d = document.createElement('i');
+        var ang = Math.random() * Math.PI * 2;
+        var dist = 70 + Math.random() * 150;
+        d.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+        d.style.setProperty('--dy', (Math.sin(ang) * dist * 0.85 + 30).toFixed(1) + 'px');
+        d.style.setProperty('--rot', (Math.random() * 1000 - 500).toFixed(0) + 'deg');
+        d.style.background = colors[i % colors.length];
+        d.style.animationDelay = (Math.random() * 0.07).toFixed(2) + 's';
+        confettiBox.appendChild(d);
+        setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 1500);
+      })(i);
     }
+  }
 
-    spinning = true;
-    spinBtn.disabled = true;
-    cardEl.classList.remove('show');
-    hintEl.textContent = '转盘转起来了…';
+  function doFlash() {
+    flash.classList.remove('go');
+    void flash.offsetWidth;                 // 强制重排以重启动画
+    flash.classList.add('go');
+  }
 
-    var n      = list.length;
-    var seg    = Math.PI * 2 / n;
-    var winner = Math.floor(Math.random() * n);
+  /* ===================== 扭蛋掉落（物理弹跳） ===================== */
+  function dropCapsule(onSettled) {
+    var colors = CAP_COLORS[Math.floor(Math.random() * CAP_COLORS.length)];
+    if (colors === lastCapColor) {
+      colors = CAP_COLORS[(CAP_COLORS.indexOf(colors) + 1) % CAP_COLORS.length];
+    }
+    lastCapColor = colors;
+    capsule.style.setProperty('--c1', colors[0]);
+    capsule.style.setProperty('--c2', colors[1]);
 
-    // 让「中奖扇区」停在顶部指针处，再加一点随机偏移，避免每次都正对中线
-    var jitter = (Math.random() - 0.5) * seg * 0.6;
-    var target = ((-winner * seg - seg / 2 - jitter) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-    var cur    = ((rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-    var delta  = target - cur;
-    if (delta < 0) delta += Math.PI * 2;
+    // 瞬时复位上一轮的「爆开」状态，否则两半蛋壳会从半空中飞回来
+    capsule.className = 'capsule show noanim';
+    void capsule.offsetWidth;
+    capsule.classList.remove('noanim');
+    capsule.style.transform = 'translate(-50%,-52px)';
 
-    var turns = 5 + Math.floor(Math.random() * 3);
-    var from  = rotation;
-    var to    = rotation + turns * Math.PI * 2 + delta;
-    var dur   = 4000 + Math.random() * 800;
-    var t0    = 0;
+    var y = -52, v = 0;
+    var G = 2400, FLOOR = 74, REST = 0.42;
+    var last = 0, settled = false;
 
     function step(now) {
-      if (!t0) t0 = now;
-      var p = Math.min(1, (now - t0) / dur);
-      var e = 1 - Math.pow(1 - p, 3);          // easeOutCubic
-      rotation = from + (to - from) * e;
-      draw();
+      if (!last) last = now;
+      var dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
 
-      if (p < 1) {
-        requestAnimationFrame(step);
-      } else {
-        spinning = false;
-        spinBtn.disabled = false;
-        spinBtn.textContent = '再抽一次';
-        hintEl.textContent = '点一下转盘再抽一次';
-        renderResult(list[winner]);
+      v += G * dt;
+      y += v * dt;
+
+      if (y >= FLOOR) {
+        y = FLOOR;
+        if (Math.abs(v) > 130 && !settled) {
+          v = -v * REST;
+          Sound.bounce(Math.min(1, Math.abs(v) / 1000));
+        } else {
+          capsule.style.transform = 'translate(-50%,' + FLOOR + 'px)';
+          if (!settled) { settled = true; onSettled(); }
+          return;
+        }
       }
+      capsule.style.transform = 'translate(-50%,' + y.toFixed(1) + 'px)';
+      requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
   }
 
-  /* ===================== 事件 ===================== */
-  spinBtn.addEventListener('click', spin);
-  canvas.addEventListener('click', spin);
-  window.addEventListener('resize', function () { resize(); });
-  window.addEventListener('orientationchange', function () { setTimeout(resize, 120); });
+  /* ===================== 整个开奖流程 ===================== */
+  function start() {
+    if (busy) return;
+    var item = drawOne();
+    if (!item) { hintEl.textContent = '这个范围里没有题目'; return; }
 
-  resize();
+    busy = true;
+    pendingItem = item;
+    Sound.unlock();
+    knob.disabled = true;
+    cardEl.classList.remove('show');
+    cardEl.innerHTML = '';
+    hintEl.textContent = '咔啦咔啦…';
+
+    // 1) 转旋钮
+    knobAngle += 360;
+    knob.style.transform = 'rotate(' + knobAngle + 'deg)';
+    Sound.turn();
+    dome.classList.add('jiggle');
+    setTimeout(function () { dome.classList.remove('jiggle'); }, 1050);
+
+    // 2) 旋钮转完 → 落蛋
+    setTimeout(function () {
+      hintEl.textContent = '扭蛋掉出来了…';
+      Sound.drop();
+      dropCapsule(function () {
+        // 3) 落定 → 摇晃蓄力
+        hintEl.textContent = '要开啦…';
+        capsule.classList.add('shake');
+        Sound.rumble();
+
+        // 4) 爆开
+        setTimeout(function () {
+          capsule.classList.remove('shake');
+          capsule.classList.add('burst');
+          Sound.pop();
+          doFlash();
+          fireConfetti();
+          setTimeout(function () { Sound.fanfare(); }, 110);
+
+          // 5) 揭晓题目
+          setTimeout(function () {
+            renderResult(pendingItem);
+            hintEl.textContent = '再转一次旋钮';
+            knob.disabled = false;
+            busy = false;
+          }, 460);
+        }, 820);
+      });
+    }, 700);
+  }
+
+  /* ===================== 事件 ===================== */
+  knob.addEventListener('click', start);
+
+  muteEl.addEventListener('click', function () {
+    var m = !Sound.isMuted();
+    Sound.setMuted(m);
+    muteEl.textContent = m ? '🔇' : '🔊';
+    muteEl.classList.toggle('off', m);
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) Sound.unlock();
+  });
+
+  buildChips();
 })();
 </script>
 </body>
