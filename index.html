@@ -265,7 +265,7 @@
     position:relative;padding:12px;margin-bottom:10px;border:1px solid var(--line);
     border-radius:12px;background:rgba(255,255,255,.03);
   }
-  .dtop{display:flex;align-items:center;gap:8px;margin-bottom:7px;padding-right:30px}
+  .dtop{display:flex;align-items:center;gap:8px;margin-bottom:7px}
   .dx{
     position:absolute;right:8px;top:8px;width:27px;height:27px;padding:0;
     border-radius:50%;border:1px solid rgba(255,90,95,.38);
@@ -282,11 +282,12 @@
   .dsrc{font-size:11.5px;color:var(--dim);margin-top:7px}
   .sheet-empty{text-align:center;color:var(--dim);font-size:14px;padding:46px 0;line-height:2}
   .sheet-foot{
+    display:flex;gap:10px;
     padding:12px 16px calc(16px + env(safe-area-inset-bottom));
     border-top:1px solid var(--line);
   }
   .reset{
-    width:100%;border:1px solid rgba(255,90,95,.45);background:rgba(255,90,95,.12);
+    flex:1;border:1px solid rgba(255,90,95,.45);background:rgba(255,90,95,.12);
     color:#ff9b9f;font-size:14.5px;font-weight:600;padding:12px;border-radius:12px;
     cursor:pointer;font-family:inherit;
   }
@@ -318,6 +319,33 @@
   .dscore.s-lo{color:#ff9b9f;background:rgba(255,90,95,.14);border:1px solid rgba(255,90,95,.35)}
   .dscore.s-mid{color:#ffd166;background:rgba(255,209,102,.13);border:1px solid rgba(255,209,102,.32)}
   .dscore.s-hi{color:#6ee7a8;background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.34)}
+
+  /* 魔盒内的打分按钮 */
+  .dscores{display:flex;gap:5px;margin-top:11px;align-items:stretch}
+  .dsb{
+    flex:1;height:31px;padding:0;border-radius:8px;border:1px solid var(--line);
+    background:rgba(255,255,255,.03);color:var(--dim);font-size:12.5px;
+    cursor:pointer;font-family:inherit;transition:all .13s;
+  }
+  .dsb.on{
+    background:linear-gradient(180deg,#5a95ff,#3b74e0);border-color:#6ea0ff;
+    color:#fff;font-weight:700;
+  }
+  .dx2{
+    flex:0 0 auto;height:31px;padding:0 11px;border-radius:8px;white-space:nowrap;
+    border:1px solid rgba(255,90,95,.35);background:rgba(255,90,95,.10);
+    color:#ff9b9f;font-size:11.5px;cursor:pointer;font-family:inherit;
+  }
+  .dx2:active{background:rgba(255,90,95,.24)}
+
+  /* 底部：撤销 + 清空 */
+  .undo{
+    flex:0 0 96px;border:1px solid var(--line);background:rgba(255,255,255,.05);
+    color:var(--fg);font-size:14.5px;font-weight:600;border-radius:12px;
+    cursor:pointer;font-family:inherit;
+  }
+  .undo:active:not(:disabled){background:rgba(255,255,255,.12)}
+  .undo:disabled{opacity:.3;cursor:default}
 
   /* 音效开关 */
   .mute{
@@ -374,7 +402,8 @@
     </div>
     <div class="sheet-body" id="doneList"></div>
     <div class="sheet-foot">
-      <button class="reset" id="resetBtn">清空魔盒，把题放回池子</button>
+      <button class="undo" id="undoBtn" disabled>撤销</button>
+      <button class="reset" id="resetBtn">清空魔盒</button>
     </div>
   </div>
 </div>
@@ -900,6 +929,7 @@
   var metaEl = $('meta'), pboxEl = $('pbox'), pboxN = $('pboxN');
   var overlayEl = $('overlay'), doneList = $('doneList'), doneN = $('doneN');
   var sheetX = $('sheetX'), resetBtn = $('resetBtn'), doneSum = $('doneSum');
+  var undoBtn = $('undoBtn');
 
   var CAP_COLORS = [
     ['#ff6b6b', '#ffd166'], ['#4f8cff', '#a5d8ff'], ['#34d399', '#a7f3d0'],
@@ -1022,6 +1052,7 @@
   }
 
   function paintSheet() {
+    var keepTop = doneList.scrollTop;
     doneN.textContent = done.length;
     var scored = done.filter(function (d) { return typeof d.score === 'number'; });
     var sum = scored.reduce(function (a, d) { return a + d.score; }, 0);
@@ -1031,6 +1062,7 @@
       : ' · 还没打分';
     if (!done.length) {
       doneList.innerHTML = '<div class="sheet-empty">魔盒还是空的<br>抽过的题会收在这里</div>';
+      doneList.scrollTop = keepTop;
       return;
     }
     var html = '';
@@ -1041,21 +1073,29 @@
       var t = new Date(d.t || Date.now());
       var hm = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2);
       html += '<div class="ditem">' +
-                '<button class="dx" data-i="' + i + '" aria-label="放回池子">✕</button>' +
                 '<div class="dtop"><span class="dtag">' + esc(d.cat) + '</span>' +
                 '<span class="dtime">' + hm + '</span>' +
                 '<span class="dscore ' + scoreClass(d.score) + '">' +
                 (d.score === undefined || d.score === null ? '未评分' : d.score + ' 分') +
                 '</span></div>' +
+                '<div class="dscores">' +
+                [0,1,2,3,4,5].map(function (v) {
+                  return '<button class="dsb' + (d.score === v ? ' on' : '') +
+                         '" data-i="' + i + '" data-v="' + v + '">' + v + '</button>';
+                }).join('') +
+                '<button class="dx2" data-i="' + i + '">放回池子</button>' +
+                '</div>' +
                 '<div class="dq">' + esc(qtext(q)) + '</div>' +
                 (src ? '<div class="dsrc">来源：' + esc(src) + '</div>' : '') +
               '</div>';
     }
     doneList.innerHTML = html;
+    doneList.scrollTop = keepTop;
   }
 
   function openSheet() {
     paintSheet();
+    paintUndo();
     overlayEl.classList.add('on');
   }
   function closeSheet() { overlayEl.classList.remove('on'); }
@@ -1317,6 +1357,37 @@
   overlayEl.addEventListener('click', function (e) {
     if (e.target === overlayEl) closeSheet();      // 点遮罩关闭
   });
+  /* ── 撤销：误删了能救回来 ── */
+  var undoStack = [];
+  function pushUndo(list) {
+    if (!list.length) return;
+    undoStack.push(list.slice());
+    if (undoStack.length > 30) undoStack.shift();
+    paintUndo();
+  }
+  function paintUndo() {
+    undoBtn.disabled = !undoStack.length;
+  }
+  function doUndo() {
+    var list = undoStack.pop();
+    if (!list) return;
+    var have = {};
+    done.forEach(function (d) { have[d.key] = 1; });
+    list.forEach(function (d) { if (!have[d.key]) { done.push(d); have[d.key] = 1; } });
+    done.sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+    rebuildMap();
+    saveDone();
+    paintBox();
+    paintSheet();
+    paintMeta();
+    paintUndo();
+    hintEl.textContent = '已撤销，' + list.length + ' 道题回到魔盒';
+  }
+  function rebuildMap() {
+    doneMap = {};
+    done.forEach(function (d) { doneMap[d.key] = 1; });
+  }
+
   /* 单题删除：从魔盒移除 = 放回池子 */
   doneList.addEventListener('click', function (e) {
     var el = e.target;
@@ -1327,9 +1398,9 @@
     var i = parseInt(el.getAttribute('data-i'), 10);
     if (isNaN(i) || !done[i]) return;
     var back = done[i];
+    pushUndo([back]);
     done.splice(i, 1);
-    doneMap = {};
-    done.forEach(function (d) { doneMap[d.key] = 1; });
+    rebuildMap();
     saveDone();
     paintBox();
     paintSheet();
@@ -1337,16 +1408,47 @@
     hintEl.textContent = '已把「' + (back.cat || '') + '」这题放回池子';
   });
 
+  /* 魔盒里直接打分 */
+  doneList.addEventListener('click', function (e) {
+    var el = e.target;
+    while (el && el !== doneList && !(el.classList &&
+           (el.classList.contains('dsb') || el.classList.contains('dx2')))) {
+      el = el.parentNode;
+    }
+    if (!el || el === doneList) return;
+    var i = parseInt(el.getAttribute('data-i'), 10);
+    if (isNaN(i) || !done[i]) return;
+
+    if (el.classList.contains('dx2')) {
+      var back = done[i];
+      pushUndo([back]);
+      done.splice(i, 1);
+      rebuildMap();
+      saveDone();
+      paintBox(); paintSheet(); paintMeta();
+      hintEl.textContent = '已把「' + (back.cat || '') + '」这题放回池子';
+    } else {
+      done[i].score = parseInt(el.getAttribute('data-v'), 10);
+      saveDone();
+      paintBox();
+      paintSheet();
+      paintMeta();
+    }
+  });
+
+  undoBtn.addEventListener('click', doUndo);
+
   resetBtn.addEventListener('click', function () {
     if (!done.length) { closeSheet(); return; }
     if (!confirm('清空魔盒，把 ' + done.length + ' 道题放回池子？')) return;
+    pushUndo(done);
     done = [];
     doneMap = {};
     saveDone();
     paintBox();
     paintSheet();
     paintMeta();
-    hintEl.textContent = '池子重新装满了，转动旋钮抽题';
+    hintEl.textContent = '池子重新装满了，转动旋钮抽题（后悔了点「撤销」）';
   });
 
   // 首次任意触摸/点击就解锁音频（iOS 必须由用户手势触发）
