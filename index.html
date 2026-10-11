@@ -1491,6 +1491,15 @@
                             { once: true, passive: true });
   });
 
+  // 离线缓存：成功打开过一次之后，即使 GitHub 连不上也能用
+  if ('serviceWorker' in navigator &&
+      (location.protocol === 'https:' ||
+       location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+
   buildChips();
   loadDone();
   paintBox();
