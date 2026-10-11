@@ -292,6 +292,33 @@
   }
   .reset:active{background:rgba(255,90,95,.2)}
 
+  /* ── 打分条 ── */
+  .scorebar{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  .scorelab{font-size:12.5px;color:var(--dim)}
+  .scorebtns{display:flex;gap:7px;margin-top:9px}
+  .sbtn{
+    flex:1;height:40px;padding:0;border-radius:10px;border:1px solid var(--line);
+    background:rgba(255,255,255,.04);color:var(--fg);font-size:15px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:all .15s;
+  }
+  .sbtn:active{transform:translateY(1px)}
+  .sbtn.on{
+    background:linear-gradient(180deg,#5a95ff,#3b74e0);border-color:#6ea0ff;color:#fff;
+    box-shadow:0 4px 12px rgba(59,116,224,.4);
+  }
+  .scoretip{margin-top:9px;font-size:12.5px;color:var(--dim);min-height:16px}
+
+  /* 魔盒里的分数徽标 */
+  .dsum{font-size:11.5px;font-weight:400;color:var(--dim)}
+  .dscore{
+    margin-left:auto;font-size:11px;font-weight:600;white-space:nowrap;
+    border-radius:999px;padding:1px 8px;
+  }
+  .dscore.s-none{color:#5f6c82;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+  .dscore.s-lo{color:#ff9b9f;background:rgba(255,90,95,.14);border:1px solid rgba(255,90,95,.35)}
+  .dscore.s-mid{color:#ffd166;background:rgba(255,209,102,.13);border:1px solid rgba(255,209,102,.32)}
+  .dscore.s-hi{color:#6ee7a8;background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.34)}
+
   /* 音效开关 */
   .mute{
     position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:9;
@@ -342,7 +369,7 @@
 <div class="overlay" id="overlay">
   <div class="sheet">
     <div class="sheet-head">
-      <span>潘多拉魔盒 · 已做 <b id="doneN">0</b> 题</span>
+      <span>潘多拉魔盒 · 已做 <b id="doneN">0</b> 题<span class="dsum" id="doneSum"></span></span>
       <button class="sheet-x" id="sheetX" aria-label="关闭">✕</button>
     </div>
     <div class="sheet-body" id="doneList"></div>
@@ -872,7 +899,7 @@
   var cardEl = $('card'), hintEl = $('hint'), chipsEl = $('chips'), muteEl = $('mute');
   var metaEl = $('meta'), pboxEl = $('pbox'), pboxN = $('pboxN');
   var overlayEl = $('overlay'), doneList = $('doneList'), doneN = $('doneN');
-  var sheetX = $('sheetX'), resetBtn = $('resetBtn');
+  var sheetX = $('sheetX'), resetBtn = $('resetBtn'), doneSum = $('doneSum');
 
   var CAP_COLORS = [
     ['#ff6b6b', '#ffd166'], ['#4f8cff', '#a5d8ff'], ['#34d399', '#a7f3d0'],
@@ -996,6 +1023,12 @@
 
   function paintSheet() {
     doneN.textContent = done.length;
+    var scored = done.filter(function (d) { return typeof d.score === 'number'; });
+    var sum = scored.reduce(function (a, d) { return a + d.score; }, 0);
+    doneSum.textContent = scored.length
+      ? ' · 总分 ' + sum + ' · 均分 ' + (sum / scored.length).toFixed(1) +
+        '（已评 ' + scored.length + ' 题）'
+      : ' · 还没打分';
     if (!done.length) {
       doneList.innerHTML = '<div class="sheet-empty">魔盒还是空的<br>抽过的题会收在这里</div>';
       return;
@@ -1010,7 +1043,10 @@
       html += '<div class="ditem">' +
                 '<button class="dx" data-i="' + i + '" aria-label="放回池子">✕</button>' +
                 '<div class="dtop"><span class="dtag">' + esc(d.cat) + '</span>' +
-                '<span class="dtime">' + hm + '</span></div>' +
+                '<span class="dtime">' + hm + '</span>' +
+                '<span class="dscore ' + scoreClass(d.score) + '">' +
+                (d.score === undefined || d.score === null ? '未评分' : d.score + ' 分') +
+                '</span></div>' +
                 '<div class="dq">' + esc(qtext(q)) + '</div>' +
                 (src ? '<div class="dsrc">来源：' + esc(src) + '</div>' : '') +
               '</div>';
@@ -1062,8 +1098,77 @@
       cardEl.appendChild(srcEl);
     }
 
+    cardEl.appendChild(scoreBar(item));
+
     cardEl.classList.add('show');
     try { cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  }
+
+  /* ===================== 打分（0–5）===================== */
+  var MAXSCORE = 5;
+
+  function scoreBar(item) {
+    var wrap = document.createElement('div');
+    wrap.className = 'scorebar';
+
+    var lab = document.createElement('span');
+    lab.className = 'scorelab';
+    lab.textContent = '这题给自己打几分？';
+    wrap.appendChild(lab);
+
+    var row = document.createElement('div');
+    row.className = 'scorebtns';
+    for (var v = 0; v <= MAXSCORE; v++) {
+      (function (v) {
+        var b = document.createElement('button');
+        b.className = 'sbtn';
+        b.setAttribute('data-v', v);
+        b.textContent = v;
+        b.onclick = function () { setScore(item.key, v); };
+        row.appendChild(b);
+      })(v);
+    }
+    wrap.appendChild(row);
+
+    var tip = document.createElement('div');
+    tip.className = 'scoretip';
+    wrap.appendChild(tip);
+    return wrap;
+  }
+
+  function findRec(key) {
+    for (var i = 0; i < done.length; i++) if (done[i].key === key) return done[i];
+    return null;
+  }
+
+  function setScore(key, v) {
+    var rec = findRec(key);
+    if (!rec) {                       // 兜底：理论上揭晓时已入盒
+      rec = { key: key, cat: pendingItem.cat, q: pendingItem.q, t: Date.now() };
+      done.push(rec);
+    }
+    rec.score = v;
+    doneMap[key] = 1;
+    saveDone();
+    paintBox();
+    paintMeta();
+
+    var bar = cardEl.querySelector('.scorebtns');
+    if (bar) {
+      [].forEach.call(bar.children, function (b) {
+        b.classList.toggle('on', parseInt(b.getAttribute('data-v'), 10) === v);
+      });
+    }
+    var tip = cardEl.querySelector('.scoretip');
+    if (tip) {
+      tip.textContent = '已记录 ' + v + ' 分' +
+        (v >= 4 ? ' · 记得很牢' : v >= 2 ? ' · 还要再练' : ' · 基本没记住');
+    }
+  }
+
+  function scoreClass(v) {
+    if (v === null || v === undefined) return 's-none';
+    return v >= 4 ? 's-hi' : v >= 2 ? 's-mid' : 's-lo';
   }
 
   /* ===================== 彩带 & 闪光 ===================== */
