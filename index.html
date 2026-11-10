@@ -2324,6 +2324,13 @@
 
   /* ===================== 题库浏览 ===================== */
   function renderBank() {
+    var pageY = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var innerTop = {};
+    [].forEach.call(bankList.querySelectorAll('.blist'), function (el) {
+      var head = el.parentNode.querySelector('.bhead');
+      if (head) innerTop[head.getAttribute('data-cat')] = el.scrollTop;
+    });
+
     var live = 0, total = 0, html = '';
     BANK.forEach(function (c) {
       var arr = c.questions, alive = 0;
@@ -2350,6 +2357,37 @@
               '</section>';
     });
     bankList.innerHTML = html;
+
+    // 还原滚动位置（展开/收起时也不跳回顶部）
+    [].forEach.call(bankList.querySelectorAll('.blist'), function (el) {
+      var head = el.parentNode.querySelector('.bhead');
+      if (head) {
+        var k = head.getAttribute('data-cat');
+        if (innerTop[k]) el.scrollTop = innerTop[k];
+      }
+    });
+    if (pageY) window.scrollTo(0, pageY);
+
+    bankCount.textContent = '可用 ' + live + ' / 共 ' + total + ' 题';
+    restoreAllBtn.style.display = Object.keys(excluded).length ? '' : 'none';
+  }
+
+  /* 只更新计数，不动列表 DOM（删题时不重绘，滚动才不会跳） */
+  function updateBankCounts() {
+    var live = 0, total = 0;
+    [].forEach.call(bankList.querySelectorAll('.bhead'), function (head) {
+      var cat = head.getAttribute('data-cat'), c = null;
+      for (var i = 0; i < BANK.length; i++) if (BANK[i].name === cat) { c = BANK[i]; break; }
+      if (!c) return;
+      var alive = 0;
+      c.questions.forEach(function (q) {
+        if (!excluded[cat + '|' + qtext(q)]) alive++;
+      });
+      live += alive;
+      total += c.questions.length;
+      var em = head.querySelector('em');
+      if (em) em.textContent = alive + ' / ' + c.questions.length;
+    });
     bankCount.textContent = '可用 ' + live + ' / 共 ' + total + ' 题';
     restoreAllBtn.style.display = Object.keys(excluded).length ? '' : 'none';
   }
@@ -2373,7 +2411,14 @@
     saveExcluded();
     paintBox();
     paintMeta();
-    renderBank();
+
+    // 只动这一行，不重绘整个列表
+    var off = !!excluded[k];
+    var row = el.parentNode;
+    if (row && row.classList) row.classList.toggle('off', off);
+    el.classList.toggle('on', off);
+    el.textContent = off ? '恢复' : '删除';
+    updateBankCounts();
   });
 
   restoreAllBtn.addEventListener('click', function () {
