@@ -20,15 +20,26 @@
     --grass:#6aa84f; --dirt:#7a563a; --dirt2:#5f4329;
     --gold:#f5c542; --red:#b23a2e; --green:#4e9a35; --blue:#3c63c8;
     --wood:#a06a3a; --wood2:#7d4f26;
+  /* ===== 内嵌像素材质 ===== */
+  --tex-dirt: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACy0lEQVR42j2TzW7iVgCFv/tjG2MwhsGBGJROZxGpq/Yluu47dN2H6LLrPlEfobupIo0magk4FmZyY7AJ1/btAin7s/jO0XfEn7/94oQQOOfQWrPf73HOkaYpfd9TliXWWm5ubmiahrquaduWrutYLBZogLIs+Zh94OFxg3MO5xz7/R6lFHVds16vaZqGMAx5e3vD8zy01vi+j9xsNlhrqd5gPB6zWCxQSqG1ZpXGjMdjlFL0fc/T0xN3yynn85kgCNjtdog/fv3ZLWcRD487uq7DOcd4PKY0R0JPslqtuFwuCCEQQlAUBYPB4J1CLmcRz99qptMpzjmyLONyuRAPA0ajEXmek+c5RVGglOL+4y3OOay1BEGArFvF569bqqoiyzL6vgdgOp0SRRHHswUgjmPquubzlw1SSpxzdF2H3G63LJMQIQR///MVrTVhGDKNNNZafrpfs1wuqaoKYwxaawC+VTW73Q49nU4B8H0f5xxSSs7nM4fjgLqu+evLhh++zxgOhwgh6LqOruuYxRGj0QgZBAH/7Qq6rsNaS57n9H1PURSkacr93YK2bdm/VAghiOOYNE3xfZ+qqq4V4mHA8XhktVrR9z1RFBFFEWVZYozhdDqx+JBQHAxSSl5eXjDG0DTNlWA4HBKGIUVRIITA932stUwmE+bzOVprjDEECqSUBEFAkiQAyLqueX19JQgC/i0McRzTdR0AeZ7z9LxnPp+Tpum7B845lFIopZBv1yxt27KYDBiNRmyLkiRJmM/n+NKR5zmHwwGl1LsDWmuSJEHeZQtub2+RUrJer9lut9x/+o7n52estXieR5ZltG1LGIYATCYTPM/DWov6cR3/HoYhl8sFYwye53E8HkmShMFgwGQywRjDp3VKd/0ep9MJ3/evI176q+PWWqIoQghB3/dUVYVSiqZpqKqKh8cd5/OZ4mCw1iKEYDab8T/npmojMejXTwAAAABJRU5ErkJggg==);
+  --tex-stone: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACfklEQVR42j2TTW/qMBBFj+2Q75gGiEQ3pb+y/7evEkIgREjAjpM4fouqbGdx5869c8TX11dQSuGcY7vdMk0T1lrquuZ6vbLb7fDeY62laRr+/fvHarVCCIFzjiiOY7IsY1kWlmUhSRKyLMMYw3a75Xw+U9c1t9uNJEmI4xghBFEUsSwLcpom2ralqipCCEgp+fn5YbVacblcaJqGYRh4f39nGAYA5nkmhIBSCvl8PqnrmtPpxOPx4H6/8/n5iTGG3W4HwDRNjOOItZau6yjLkufzSRRFRFprjscj6/WaJEnw3tN1HVVV0bYtURRRVRXOOYqioK5rtNYMw8D1eiUqioIsywAIIQBQliXee4qiwHtP27avuXOOn58f8jzn4+MD6ZyjbdtXcEopbrcb1lratsUYQ1mWRFGEtZbn84nWmhACfd8TOefIsoz7/Y7Wmq7rSNOUvu+RUqK1pu97mqYhhMA8zyilXkKyrmuccxhj6LqOJEnYbDYcDgeklAghyPOc7+9v0jRlmiZCCOR5/pvRPM/EcUxZlkgpGYaB2+1Gmqa/PUtJmqb8LXo8HhRFgVIKpRSRMYZpmrhcLqxWK4qiYJomvPcAGGNwziGlfH2pc45xHMmyDAm8rHrvMcbQNA1CCIQQzPOM1hqlFNM0kaYpXdfR9z1d1yHf3t5YlgXnHFVVUVUVx+MRay1pmuK9J45j0jR9WZ/nmSRJ2O/3RFJK/kSstQBsNhustS9ozuczh8MBYwx1XWOtRQjB6XQiul6v/J0hpWQcR7z3KKW43+8AL6istYQQWK/XGGN+axRCMI4jZVmitWZZFvq+J47jF95d15HnOfv9Hq01cRy/Qv0PJW9z1l72/JwAAAAASUVORK5CYII=);
+  --tex-cobble: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACPUlEQVR42q2TTU7jQBCFP7ftdDvGMlaIUQSCAFvOww04Mitgw4IoIiF2/Jtut3sWDL7ATO1q8/Teq6+85+dnN5vNyPOcl5cX7u7uiOOY4/HIx8cH9/f37Pd7FosF4zjinCOOY8IwpCxLxO3tLVJKgiAAQClFVVWUZcnvnJ2dAWCtRUqJMYbNZoPneYi6rhnHEWMMAKfTCa01Nzc3AERRRNu2DMOAtZamafj6+uLi4oK+7/Genp4c/zDBer1mNpthreX9/Z31eo3v+3Rdx+fnJ9fX1wgh6LqO5XJJGIbs93uyLGOz2SD6vqeqKjzPAyAMQzzPo21bANq2RSnF+fk5TdPQti1SSo7HI5eXlwRBEDCOI7vdDoCyLJnNZqxWK4qiIMsyjDFYa6nrGmstSiniOGa73f6HDh4eHpBSorXm7e2Nx8dHtNY453h9fWW1WqG1Js9ziqIgDEOMMSilaNsW0XXdZO83szGGYRgAmM/nSCk5HA4kSYIxhizL0FojhEAopSiKAiEEAJ7n8f39PZUaxzHWWrIswznHcrlkt9vxy49omgYA536qGMeRJEmmjEVREEXRJNp1HUmSkGUZSimElPIHyb8OfN/HGEPf9wD0fY+1ljzPJwoB6rpmGAaEtZY0TQnDcEI3TVNOp9Mk6Ps+1trpJzzPIwgCrLWI+XzOOI6TQFVVOOem3VpL3/cMw8B2u+Xq6grnHHmeE0XRzxWccxN5WmvatiVN04nMNE2pqorFYsHhcCAIArquQwjBH1l7QUJeFKMzAAAAAElFTkSuQmCC);
+  --tex-plank: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABzklEQVR42qWSu24UQRBFT8/b7e7FzczKIKElcUTgiNgBIQGfwifwTXwDn0BMggXC4/FjHjvP3ekmWLRYIIQxNyqVbpVUp654+/qF44dWS8150fCr/tQHEO/fvXH8h4L88gYpJXVdY61Fa01d1xwdHVFVFWEY4nke4zhijKFtW4ZhQEqJEAJvmia22y1SSnzfp+s6JutxeVOTZRnOORaLBdZarq+vUUqRZRlmIXdL7jJ40Amrpebk+fG9Bz59zvf+7TQRLI2mqjuGYcDzPOI4Zr1eE0URfd+TJAnOOcZxJAgCjtNHdP2GoihQSuHFcUxZliilSJKEeZ6Z53m/8ODgAK018zyzfLxACEHTNKRpStu2OwZnpys+fDy/9+/v+n/LwXaaCKKIv/X2EC+LW6y1ZEZzUdxijOGiyHmyNNTtiLWWJEno6xLf9/d8pJREUbTLwXrYsrEeWms2mw1xHFPc1DRNg5SSpmmIogghBABJktB13U8GD83A2emK4NXLk38evMsk+PI1J01T8jxHSolzjr7vMcYQhiFlWaK1pqoqhBAIITg8POT2W4HneQTOOa6urlBKEYYhzjmGYcD3/f3tVVURBAFKqX397OmSaRZ8B7LB5dH9La84AAAAAElFTkSuQmCC);
+  --tex-paper: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACCklEQVR42k2Ty44TMRBFj6vKbjshMEj8/xfxCSxZoZEImUnaj7bNoicNS1/Zrvsq9/PH9ykizDkREXrvOOcQEdL5Qn68470/8DEGACLCGAMxM1SVEAIhBOacxBgBePvzmzEGYwxKKTjncM6xpDM5ZwBsjMG2VVI6AxBCoJQCgKqiqtRaMTMej3ec288hhJ2BiBBCxDlHKYXeO2bGnJNtqyzpjIiwM/Vcvnzl0+cXxhik8wV3/fVjlvV+6AawECnrHTNjXVdUlW3bMDMAnHPMOXcG77crqnoAYwxqftBao/eOqmJmh5HAkzohBMR7zxgDVaW1hqrSe2fOSYgnQgj03qk1Y2Y45/DeY2bknJFaK2OMD4PcEdeyLLSyUmtFVVmWxJwT7z1zTkopnE4n7DkxpfPB4Jm1c450vhyRArRWEDFijLsU5xwA63rfo/PLMSXnTPnAn30BmHPuUpa0M0jnCzU/EBFu11eWJVFrxXuPc47b9RWR3UiReDTyfn1FQjxxu75SSqGUwrIktm1jzs62bR/tU1JKh7RaKyLC55dvSCsrInZUufd+XPy/la01RATvPQD3+xutrNjTuG3bAFiW5XgQ4uko2DP7WisxRkop/5bJzBhj0Hsj53zE9X678tzUnDPq989LKYjI3k5VZV3XY3LvnZzzHmHa/WitEWPk/vYH7z2tFeZUvPf8BWCTUvQ1ANi4AAAAAElFTkSuQmCC);
+  --tex-glass: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mN88eP/fwYKAAsDAwPDgQevL5Oj+cyFK7pMDBQCFAN8VUR1KTIAZggpBrEgczbfIT0sqBsGI8AAbLFDkgGb77y+jG4IyV5Aj+qBD0QWWK4i1wQAGSQaAorAEXQAAAAASUVORK5CYII=);
+  --tex-dark: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACJklEQVR42lWTy3KjMBREz9UbsHEcr2Y3q/n/P8MmIAIS0ixcUVV2Kqladfvcbvn390/13mOM4TgOvPeklKi10nUd8zxzuVyIMdJ1HUoplmWhlELXdRitNcYYRITr9UrOmW3b+Pj4YJ5nuq5jXVe898zzDIBzjr7vsdaiRITzPLHWklJi33ecc+z7Tq2V4zhwzgFwuVxQSqG1ZlkW9n1HKaWIMQKwLAtKKbquo+97hmEgpUTf94gI1lpEpL2VUjDee7TWfH9/o7XmOA7WdaXve2qt1FpZ17VNdbvdSClxnifbtmF+/P9ANMZgrWXfd7z3iEgDd55nO1tr0VpjSims60ophXEcyTkTY2QcR+Z5JoSAiHC73RCRZjPnzDiOmNfrhdaacRwppVBKQWuNUgqAWusvoXOucYkxovq+B2Bd17YuEWGaJs7zJKWEtbYJjTHc73eO4+B6vWJyzgzDgIiQUiKlBNBoA2zbBoC1lmmaUErR9/2bSQihiUIIxBiptaK1JueM1poQQrt7PB5Ya7HWvj+IMbJtGzlnpmnCOYfWGhEBwBjDsix0XUetlXmeERG+vr6otaK01g3W/X7/FRbnXOuEiBBCIITQ/McY32scxxGAUkqzMk0Tj8eD5/OJiOC9b1tyzrGu6zva1lrmeabWyvP5JOfMeZ5471s+fgrmvWffd4ZhwBiDc+7dxnEciTFSSqHWyuv14vPzk1pro30cB1rrNskP+P8ImFKcCypp2wAAAABJRU5ErkJggg==);
+  --heart-full: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAAVElEQVR42mNgYGBg2KCh8X+DhsZ/dDYMMMEE/DMzGf5PnAiXRFbIgqzj+sqVyFy4QkZ0o7EBJgYiAFPAjRuM+BQE3LjByARj4FKAYh26Qrw2YPMIAB7tJHc/mgwTAAAAAElFTkSuQmCC);
+  --heart-half: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAAZElEQVR42o3QwQ2AIAxA0U/jMjoC4cwKzMUYrMCZOAKOU08YIGL8176mSQGo1mq1VgG8c+qdU7qkDfcQ0BifYQ+3fuNKCUSYoQxgkfAjOc7TfIFcihGAFcylmOHcDBt4bf4RwA2xviPYMS9gOgAAAABJRU5ErkJggg==);
+  --heart-empty: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAAP0lEQVR42mNgYGBg8LKz++9lZ/cfnQ0DjOgCyGDboUOMBBXBABMDEYA4RTB78bmLCdmBuBzOhC6Ai48CsPkWAOzTHA0o3l6QAAAAAElFTkSuQmCC);
+  /* 材质总大小约 5.9 KB */
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0}
   body{
-    background:
-      radial-gradient(circle at 30% 20%, rgba(255,255,255,.045) 0 2px, transparent 2px) 0 0/18px 18px,
-      radial-gradient(circle at 65% 70%, rgba(0,0,0,.22) 0 3px, transparent 3px) 0 0/18px 18px,
-      linear-gradient(180deg,#302a22 0%,#1a1511 100%);
-    background-attachment:fixed;
+    background-color:#221c16;
+    background-image:var(--tex-dark);
+    background-size:40px 40px;
+    image-rendering:pixelated;
     color:#e9e9e9;
     min-height:100vh;
     font:16px/1.6 "PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,Arial,sans-serif;
@@ -106,10 +117,8 @@
 
   .dome{
     position:relative;width:190px;height:190px;margin:0 auto -20px;
-    background:
-      linear-gradient(135deg, rgba(255,255,255,.55) 0 10px, transparent 10px),
-      repeating-linear-gradient(45deg, rgba(255,255,255,.07) 0 9px, transparent 9px 18px),
-      #9fd3e8;
+    background-image:var(--tex-glass);
+    background-size:48px 48px;
     border:4px solid var(--edge);
     box-shadow:inset 4px 4px 0 rgba(255,255,255,.55), inset -4px -4px 0 rgba(0,0,0,.16);
     overflow:hidden;
@@ -130,10 +139,8 @@
 
   .body{
     position:relative;width:248px;height:118px;margin:0 auto;
-    background:
-      repeating-linear-gradient(90deg, rgba(0,0,0,.09) 0 2px, transparent 2px 14px),
-      repeating-linear-gradient(0deg, rgba(0,0,0,.09) 0 2px, transparent 2px 14px),
-      linear-gradient(180deg,#909090,#7b7b7b);
+    background-image:var(--tex-cobble);
+    background-size:40px 40px;
     border:4px solid var(--edge);
     box-shadow:inset 4px 4px 0 #b6b6b6, inset -4px -4px 0 #565656;
   }
@@ -231,8 +238,10 @@
   /* ── 题目卡 ── */
   .card{
     width:100%;max-width:360px;margin-top:14px;padding:14px;
-    background:var(--gui);border:3px solid var(--edge);
-    box-shadow:inset 3px 3px 0 var(--gui-lt), inset -3px -3px 0 var(--gui-dk);
+    background-image:var(--tex-paper);background-size:32px 32px;
+    background-color:#e4dfd2;
+    border:3px solid var(--edge);
+    box-shadow:inset 3px 3px 0 rgba(255,255,255,.75), inset -3px -3px 0 var(--gui-dk);
     color:var(--ink);display:none;
   }
   .card.show{display:block}
@@ -293,14 +302,15 @@
   }
   .pbox-lid{
     position:absolute;left:0;right:0;top:0;height:24px;
-    background:linear-gradient(180deg,#b57a45,#9a6234);
+    background-image:var(--tex-plank);background-size:32px 32px;
     border:3px solid var(--edge);
     box-shadow:inset 3px 3px 0 rgba(255,255,255,.25), inset -3px -3px 0 rgba(0,0,0,.28);
     transition:transform .2s steps(2);
   }
   .pbox-body{
     position:absolute;left:0;right:0;top:21px;bottom:0;
-    background:linear-gradient(180deg,#8d5b30,#6f4523);
+    background-image:var(--tex-plank);background-size:32px 32px;
+    filter:brightness(.82);
     border:3px solid var(--edge);
     box-shadow:inset 3px 3px 0 rgba(255,255,255,.18), inset -3px -3px 0 rgba(0,0,0,.3);
   }
@@ -327,8 +337,10 @@
   .overlay.on{display:flex}
   .sheet{
     width:100%;max-width:430px;max-height:84vh;display:flex;flex-direction:column;
-    background:var(--gui);border:4px solid var(--edge);
-    box-shadow:inset 4px 4px 0 var(--gui-lt), inset -4px -4px 0 var(--gui-dk);
+    background-image:var(--tex-paper);background-size:32px 32px;
+    background-color:#e4dfd2;
+    border:4px solid var(--edge);
+    box-shadow:inset 4px 4px 0 rgba(255,255,255,.75), inset -4px -4px 0 var(--gui-dk);
   }
   .sheet-head{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -430,8 +442,10 @@
   .psec h3 em{font-style:normal;font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap}
   .pq{
     position:relative;display:flex;gap:9px;padding:11px;margin-bottom:8px;
-    background:var(--gui);border:3px solid var(--edge);color:var(--ink);
-    box-shadow:inset 3px 3px 0 var(--gui-lt), inset -3px -3px 0 var(--gui-dk);
+    background-image:var(--tex-paper);background-size:32px 32px;
+    background-color:#e4dfd2;
+    border:3px solid var(--edge);color:var(--ink);
+    box-shadow:inset 3px 3px 0 rgba(255,255,255,.75), inset -3px -3px 0 var(--gui-dk);
   }
   .pqno{
     flex:0 0 24px;height:24px;font-size:12px;font-weight:700;color:#1f1f1f;
@@ -498,6 +512,59 @@
     box-shadow:inset 2px 2px 0 #7cc45c, inset -2px -2px 0 #2f6b20;
   }
 
+  /* ── 血条 / 经验条 ── */
+  .hud{
+    width:100%;max-width:360px;display:flex;flex-direction:column;gap:7px;margin-bottom:12px;
+  }
+  .hearts{display:flex;gap:2px;height:18px}
+  .hearts i{
+    width:18px;height:18px;background-size:100% 100%;background-repeat:no-repeat;
+    image-rendering:pixelated;
+  }
+  .xp{
+    position:relative;height:18px;background:#241f19;border:3px solid var(--edge);
+    box-shadow:inset 2px 2px 0 #000, inset -2px -2px 0 #4a4a4a;
+  }
+  .xpfill{
+    position:absolute;left:0;top:0;bottom:0;width:0;
+    background:linear-gradient(180deg,#a4e06a,#4e9a35);
+    transition:width .35s;
+  }
+  .xplab{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:700;color:#fff;letter-spacing:.5px;
+    text-shadow:1px 1px 0 #000, -1px -1px 0 #000;
+  }
+
+  /* ── 物品栏格子 ── */
+  .blist.grid{
+    display:grid;grid-template-columns:repeat(9,1fr);gap:2px;
+    padding:6px;max-height:60vh;overflow-y:auto;
+  }
+  .bslot{
+    position:relative;height:36px;padding:0;cursor:pointer;font-family:inherit;
+    background:#8b8b8b;border:2px solid var(--slot-dk);
+    box-shadow:inset 2px 2px 0 #5f5f5f, inset -2px -2px 0 #a9a9a9;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .bslot.off{background:#4a4a4a;opacity:.5}
+  .bslot:active{box-shadow:inset -2px -2px 0 #5f5f5f, inset 2px 2px 0 #a9a9a9}
+  .bsi{
+    width:13px;height:15px;background:#e9dfc4;border:1px solid #6f6247;
+    position:relative;flex:0 0 auto;
+  }
+  .bsi::after{
+    content:'';position:absolute;left:2px;right:2px;top:3px;height:1px;
+    background:#b3a888;box-shadow:0 3px 0 #b3a888, 0 6px 0 #b3a888;
+  }
+  .bsl{font-size:9px;font-weight:700;color:#1f1f1f;line-height:1;margin-top:1px}
+  .bslot.off .bsl{text-decoration:line-through;color:#9a9a9a}
+  .reset.on{
+    background:var(--green);
+    box-shadow:inset 3px 3px 0 #8ecb6d, inset -3px -3px 0 #3f6b2c;
+  }
+
   /* ── 音效开关 ── */
   .mute{
     position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:9;
@@ -532,6 +599,11 @@
   <button class="tab" data-view="paper">套题</button>
   <button class="tab" data-view="bank">题库</button>
 </nav>
+
+<div class="hud">
+  <div class="hearts" id="hearts"></div>
+  <div class="xp"><div class="xpfill" id="xpfill"></div><span class="xplab" id="xplab">已做 0 / 0</span></div>
+</div>
 
 <div class="view" id="view-pull">
 
@@ -570,6 +642,7 @@
 <div class="view" id="view-bank" hidden>
   <div class="bbar">
     <span id="bankCount"></span>
+    <button class="pbtn ghost" id="bankModeBtn">列表</button>
     <button class="pbtn ghost" id="restoreAll" style="display:none">恢复已删除的题</button>
   </div>
   <div id="bankList"></div>
@@ -581,6 +654,17 @@
   <span class="pbox-body"></span>
   <span class="pbox-n" id="pboxN" data-zero="1">0</span>
 </button>
+
+<div class="overlay" id="bd">
+  <div class="sheet">
+    <div class="sheet-head"><span id="bdHead">题目</span><button class="sheet-x" id="bdX">✕</button></div>
+    <div class="sheet-body">
+      <div class="dq" id="bdQ"></div>
+      <div class="dsrc" id="bdS"></div>
+    </div>
+    <div class="sheet-foot"><button class="reset" id="bdBtn">删除这题</button></div>
+  </div>
+</div>
 
 <div class="overlay" id="overlay">
   <div class="sheet">
@@ -1766,6 +1850,10 @@
   var undoBtn = $('undoBtn'), exBtn = $('exBtn'), exNEl = $('exNEl');
   var titleEl = $('title'), paperEl = $('paper'), bankList = $('bankList');
   var bankCount = $('bankCount'), restoreAllBtn = $('restoreAll'), newPaperBtn = $('newPaper');
+  var heartsEl = $('hearts'), xpFillEl = $('xpfill'), xpLabEl = $('xplab');
+  var bankModeBtn = $('bankModeBtn'), bdEl = $('bd'), bdQ = $('bdQ'), bdS = $('bdS');
+  var bdBtn = $('bdBtn'), bdX = $('bdX'), bdHead = $('bdHead');
+  var bankMode = 'grid', bdKey = null;
 
   var CAP_COLORS = [
     ['#ff6b6b', '#ffd166'], ['#4f8cff', '#a5d8ff'], ['#34d399', '#a7f3d0'],
@@ -1890,6 +1978,37 @@
     var left = all.filter(function (x) { return !doneMap[x.key]; }).length;
     metaEl.innerHTML = '池中剩余 <b>' + left + '</b> / ' + all.length +
                        ' 题　·　已做 <b>' + (all.length - left) + '</b> 题';
+    paintHud();
+  }
+
+  /* 血条＝平均得分率，经验条＝已做进度 */
+  function paintHud() {
+    var live = 0;
+    BANK.forEach(function (c) {
+      c.questions.forEach(function (q) {
+        if (!excluded[c.name + '|' + qtext(q)]) live++;
+      });
+    });
+
+    var scored = done.filter(function (d) { return typeof d.score === 'number'; });
+    var rate = 0;
+    scored.forEach(function (d) { rate += d.score / fullOf(d.cat); });
+    rate = scored.length ? rate / scored.length : 0;
+
+    var units = rate * 10;
+    var full = Math.floor(units);
+    var half = (units - full) >= 0.5 ? 1 : 0;
+    var h = '';
+    for (var i = 0; i < 10; i++) {
+      var k = i < full ? 'full' : (i === full && half ? 'half' : 'empty');
+      h += '<i style="background-image:var(--heart-' + k + ')"></i>';
+    }
+    heartsEl.innerHTML = h;
+
+    var pct = live ? Math.min(100, done.length / live * 100) : 0;
+    xpFillEl.style.width = pct.toFixed(1) + '%';
+    xpLabEl.textContent = '已做 ' + done.length + ' / ' + live +
+                          (scored.length ? '　得分率 ' + Math.round(rate * 100) + '%' : '');
   }
 
   function paintBox() {
@@ -2530,17 +2649,28 @@
                   '<span>' + (open ? '▾ ' : '▸ ') + esc(c.name) + '</span>' +
                   '<em>' + alive + ' / ' + arr.length + '</em>' +
                 '</button>' +
-                (open ? '<div class="blist">' + arr.map(function (q) {
-                  var k = c.name + '|' + qtext(q);
-                  var off = !!excluded[k];
-                  var t = qtext(q);
-                  if (t.length > 64) t = t.slice(0, 62) + '…';
-                  return '<div class="brow' + (off ? ' off' : '') + '">' +
-                           '<span class="bt">' + esc(t) + '</span>' +
-                           '<button class="bdel' + (off ? ' on' : '') + '" data-k="' + esc(k) + '">' +
-                             (off ? '恢复' : '删除') + '</button>' +
-                         '</div>';
-                }).join('') + '</div>' : '') +
+                (open ? (bankMode === 'grid'
+                  ? '<div class="blist grid">' + arr.map(function (q) {
+                      var k = c.name + '|' + qtext(q);
+                      var off = !!excluded[k];
+                      var t = qtext(q).replace(/\s+/g, '');
+                      return '<button class="bslot' + (off ? ' off' : '') +
+                             '" data-k="' + esc(k) + '">' +
+                               '<span class="bsi"></span>' +
+                               '<span class="bsl">' + esc(t.slice(0, 2)) + '</span>' +
+                             '</button>';
+                    }).join('') + '</div>'
+                  : '<div class="blist">' + arr.map(function (q) {
+                      var k = c.name + '|' + qtext(q);
+                      var off = !!excluded[k];
+                      var t = qtext(q);
+                      if (t.length > 64) t = t.slice(0, 62) + '…';
+                      return '<div class="brow' + (off ? ' off' : '') + '">' +
+                               '<span class="bt">' + esc(t) + '</span>' +
+                               '<button class="bdel' + (off ? ' on' : '') + '" data-k="' + esc(k) + '">' +
+                                 (off ? '恢复' : '删除') + '</button>' +
+                             '</div>';
+                    }).join('') + '</div>') : '') +
               '</section>';
     });
     bankList.innerHTML = html;
@@ -2582,7 +2712,8 @@
   bankList.addEventListener('click', function (e) {
     var el = e.target;
     while (el && el !== bankList && !(el.classList &&
-           (el.classList.contains('bhead') || el.classList.contains('bdel')))) {
+           (el.classList.contains('bhead') || el.classList.contains('bdel') ||
+            el.classList.contains('bslot')))) {
       el = el.parentNode;
     }
     if (!el || el === bankList) return;
@@ -2593,6 +2724,11 @@
       renderBank();
       return;
     }
+    if (el.classList.contains('bslot')) {
+      openDetail(el.getAttribute('data-k'));
+      return;
+    }
+
     var k = el.getAttribute('data-k');
     if (excluded[k]) delete excluded[k]; else excluded[k] = 1;
     saveExcluded();
@@ -2606,6 +2742,42 @@
     el.classList.toggle('on', off);
     el.textContent = off ? '恢复' : '删除';
     updateBankCounts();
+  });
+
+  /* ── 题目详情浮层 ── */
+  function openDetail(k) {
+    bdKey = k;
+    var parts = k.split('|');
+    var off = !!excluded[k];
+    bdHead.textContent = parts[0] || '题目';
+    bdQ.textContent = parts.slice(1).join('|');
+    bdS.textContent = off ? '状态：已删除（不会出现在抽题池）' : '状态：可用';
+    bdBtn.textContent = off ? '恢复这题' : '删除这题';
+    bdBtn.classList.toggle('on', off);
+    bdEl.classList.add('on');
+  }
+  function closeDetail() { bdEl.classList.remove('on'); bdKey = null; }
+
+  bdX.addEventListener('click', closeDetail);
+  bdEl.addEventListener('click', function (e) { if (e.target === bdEl) closeDetail(); });
+
+  bdBtn.addEventListener('click', function () {
+    if (!bdKey) return;
+    if (excluded[bdKey]) delete excluded[bdKey]; else excluded[bdKey] = 1;
+    saveExcluded();
+    paintBox();
+    paintMeta();
+    renderBank();
+    var off = !!excluded[bdKey];
+    bdS.textContent = off ? '状态：已删除（不会出现在抽题池）' : '状态：可用';
+    bdBtn.textContent = off ? '恢复这题' : '删除这题';
+    bdBtn.classList.toggle('on', off);
+  });
+
+  bankModeBtn.addEventListener('click', function () {
+    bankMode = bankMode === 'grid' ? 'list' : 'grid';
+    bankModeBtn.textContent = bankMode === 'grid' ? '列表' : '格子';
+    renderBank();
   });
 
   restoreAllBtn.addEventListener('click', function () {
