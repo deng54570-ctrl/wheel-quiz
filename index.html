@@ -380,6 +380,118 @@
   .undo:active:not(:disabled){background:rgba(255,255,255,.12)}
   .undo:disabled{opacity:.3;cursor:default}
 
+  /* ── 顶部页签 ── */
+  .tabs{
+    display:flex;gap:8px;margin:0 0 14px;padding:4px;border-radius:12px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);
+    width:100%;max-width:360px;
+  }
+  .tab{
+    flex:1;border:0;background:none;color:var(--dim);font-size:14px;font-weight:600;
+    padding:8px 0;border-radius:9px;cursor:pointer;font-family:inherit;transition:all .18s;
+  }
+  .tab.on{
+    background:linear-gradient(180deg,#5a95ff,#3b74e0);color:#fff;
+    box-shadow:0 4px 12px rgba(59,116,224,.4);
+  }
+  .view{width:100%;display:flex;flex-direction:column;align-items:center}
+  .view[hidden]{display:none}
+
+  /* ── 套题 ── */
+  .pbar{width:100%;max-width:360px;margin-bottom:14px}
+  .pbtn{
+    width:100%;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:700;
+    color:#fff;background:linear-gradient(180deg,#5a95ff,#3b74e0);cursor:pointer;
+    font-family:inherit;box-shadow:0 6px 18px rgba(59,116,224,.35);
+  }
+  .pbtn:active{transform:translateY(1px)}
+  .pbtn.ghost{
+    width:auto;background:rgba(255,255,255,.06);border:1px solid var(--line);
+    box-shadow:none;font-size:12.5px;font-weight:600;padding:8px 13px;color:var(--dim);
+  }
+  #paper{width:100%;max-width:360px}
+  .psec{margin-bottom:20px}
+  .psec h3{
+    font-size:14px;font-weight:700;margin:0 0 9px;color:#cfe0ff;
+    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  }
+  .psec h3 em{font-style:normal;font-size:11px;color:var(--dim);font-weight:400;white-space:nowrap}
+  .pq{
+    position:relative;display:flex;gap:9px;padding:11px 12px;margin-bottom:8px;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;
+  }
+  .pqno{
+    flex:0 0 22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(79,140,255,.16);border:1px solid rgba(79,140,255,.35);color:#bcd0ff;
+  }
+  .pqbody{flex:1;min-width:0}
+  .pqtext{font-size:14.5px;line-height:1.68;word-break:break-word}
+  .pqsrc{font-size:11px;color:#5f6c82;margin-top:5px}
+  .pqhint{
+    font-size:12.5px;line-height:1.62;color:#9fb6dd;margin-top:8px;padding:9px 10px;
+    border-radius:8px;background:rgba(79,140,255,.08);border:1px solid rgba(79,140,255,.2);
+  }
+  .pqacts{flex:0 0 auto;display:flex;flex-direction:column;gap:5px}
+  .pqre,.pqhi{
+    border:1px solid rgba(79,140,255,.4);background:rgba(79,140,255,.1);
+    color:#bcd0ff;font-size:11px;padding:4px 7px;border-radius:7px;
+    cursor:pointer;font-family:inherit;white-space:nowrap;
+  }
+  .pqre:active,.pqhi:active{background:rgba(79,140,255,.26)}
+  .pempty{text-align:center;color:var(--dim);font-size:13.5px;padding:40px 0;line-height:2}
+
+  /* ── 题库 ── */
+  .bbar{
+    width:100%;max-width:360px;display:flex;justify-content:space-between;
+    align-items:center;margin-bottom:10px;gap:10px;
+  }
+  #bankCount{font-size:12.5px;color:var(--dim)}
+  #bankList{width:100%;max-width:360px}
+  .bsec{
+    margin-bottom:9px;border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;background:rgba(255,255,255,.03);
+  }
+  .bhead{
+    width:100%;border:0;background:none;color:var(--fg);font-family:inherit;
+    font-size:13.5px;font-weight:600;padding:12px;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+  }
+  .bhead em{font-style:normal;font-size:11.5px;color:var(--dim);font-weight:400;white-space:nowrap}
+  .blist{border-top:1px solid var(--line);max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .brow{
+    display:flex;gap:8px;align-items:center;padding:9px 12px;
+    border-bottom:1px solid rgba(255,255,255,.045);
+  }
+  .brow:last-child{border-bottom:0}
+  .brow.off{opacity:.4}
+  .brow.off .bt{text-decoration:line-through}
+  .bt{flex:1;font-size:12.5px;line-height:1.5;word-break:break-word;color:#d7e0ee}
+  .bdel{
+    flex:0 0 auto;border:1px solid rgba(255,90,95,.35);background:rgba(255,90,95,.08);
+    color:#ff9b9f;font-size:11px;padding:4px 9px;border-radius:7px;
+    cursor:pointer;font-family:inherit;white-space:nowrap;
+  }
+  .bdel.on{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1);color:#6ee7a8}
+
+  /* 答题要点按钮 */
+  .hintbtn{
+    margin-top:14px;border:1px solid rgba(79,140,255,.4);background:rgba(79,140,255,.1);
+    color:#bcd0ff;font-size:12.5px;padding:7px 12px;border-radius:9px;
+    cursor:pointer;font-family:inherit;
+  }
+  .hintbtn:active{background:rgba(79,140,255,.26)}
+
+  /* 轻提示 */
+  .toast{
+    position:fixed;left:50%;bottom:94px;transform:translate(-50%,12px);
+    z-index:40;padding:10px 16px;border-radius:11px;font-size:13px;
+    background:rgba(30,38,54,.96);border:1px solid var(--line);color:#e6edf8;
+    box-shadow:0 10px 26px rgba(0,0,0,.5);opacity:0;pointer-events:none;
+    transition:opacity .2s, transform .2s;white-space:nowrap;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+
   /* 音效开关 */
   .mute{
     position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:9;
@@ -394,7 +506,15 @@
 
 <div class="mute" id="mute" title="音效开关">🔊</div>
 
-<h1>扭蛋抽题</h1>
+<h1 id="title">扭蛋抽题</h1>
+
+<nav class="tabs" id="tabs">
+  <button class="tab on" data-view="pull">扭蛋</button>
+  <button class="tab" data-view="paper">套题</button>
+  <button class="tab" data-view="bank">题库</button>
+</nav>
+
+<div class="view" id="view-pull">
 
 <div class="chips" id="chips"></div>
 
@@ -419,6 +539,22 @@
 <div class="meta" id="meta"></div>
 <div class="hint" id="hint">转动旋钮，抽一颗扭蛋</div>
 <div class="card" id="card"></div>
+</div><!-- /view-pull -->
+
+<div class="view" id="view-paper" hidden>
+  <div class="pbar">
+    <button class="pbtn" id="newPaper">生成一套题</button>
+  </div>
+  <div id="paper"></div>
+</div>
+
+<div class="view" id="view-bank" hidden>
+  <div class="bbar">
+    <span id="bankCount"></span>
+    <button class="pbtn ghost" id="restoreAll" style="display:none">恢复已删除的题</button>
+  </div>
+  <div id="bankList"></div>
+</div>
 
 <!-- 潘多拉魔盒 -->
 <button class="pbox" id="pbox" aria-label="潘多拉魔盒：查看做过的题">
@@ -1111,6 +1247,107 @@
       { q: '切斯特曼的翻译策略观', src: '2023 · 622 ／ 2024 · 622' },
       { q: '意译', src: '2025 · 622' },
       { q: '文本扁平化', src: '2026 · 622' },
+      { q: '模因（meme）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '模因池（meme pool）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '超模因（supermeme）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '五大超级模因', src: '模因与翻译规范 · 读书笔记' },
+      { q: '互惠性模因', src: '模因与翻译规范 · 读书笔记' },
+      { q: '宿主（host）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '模因的进化', src: '模因与翻译规范 · 读书笔记' },
+      { q: '波普尔的三个世界', src: '模因与翻译规范 · 读书笔记' },
+      { q: '理论图式（P1-TT-EE-P2）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '源语—目标语模因', src: '模因与翻译规范 · 读书笔记' },
+      { q: '不可译性', src: '模因与翻译规范 · 读书笔记' },
+      { q: '既定现实（弗里德里希）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '诗歌的不可译性（雅各布森）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '巴别塔', src: '模因与翻译规范 · 读书笔记' },
+      { q: '亚里士多德的二元论', src: '模因与翻译规范 · 读书笔记' },
+      { q: '神圣话语不可篡改', src: '模因与翻译规范 · 读书笔记' },
+      { q: '有效表述原则（卡茨）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '语言亲缘性（本雅明）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '字面翻译', src: '模因与翻译规范 · 读书笔记' },
+      { q: '自由翻译', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译单位（巴尔胡达罗夫）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '极端字面翻译（纳博科夫）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '语义翻译（纽马克）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '最小转换（奈达）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '等值（equivalence）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '形式等值', src: '模因与翻译规范 · 读书笔记' },
+      { q: '动态等值（奈达）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '绝对等值', src: '模因与翻译规范 · 读书笔记' },
+      { q: '文体等值', src: '模因与翻译规范 · 读书笔记' },
+      { q: '写作即翻译', src: '模因与翻译规范 · 读书笔记' },
+      { q: '阐释性的翻译观', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译即重建', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译即复制', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译即模仿', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译即创造', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译即信息传递', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译即解码', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译即操纵', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译即思维', src: '模因与翻译规范 · 读书笔记' },
+      { q: '直译模因', src: '模因与翻译规范 · 读书笔记' },
+      { q: '上帝之言阶段', src: '模因与翻译规范 · 读书笔记' },
+      { q: '逻各斯', src: '模因与翻译规范 · 读书笔记' },
+      { q: '食人主义翻译观', src: '模因与翻译规范 · 读书笔记' },
+      { q: '关联论（格特）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译的不确定性（奎因）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '多元系统理论', src: '模因与翻译规范 · 读书笔记' },
+      { q: '折射文本', src: '模因与翻译规范 · 读书笔记' },
+      { q: '帝国主义诗学（切菲兹）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '目的论（skopos）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译行为（霍尔茨曼塔里）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '核心句（奈达）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '差异分析法', src: '模因与翻译规范 · 读书笔记' },
+      { q: '《翻译的语言学理论》（卡特福德）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '语言规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '产品规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '交际规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '伦理规范（真诚规范）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '期待性规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '专业规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '问责规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '关系规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '预备规范（图里）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '操作规范（图里）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '初始规范（图里）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '适切性翻译与可接受性翻译', src: '模因与翻译规范 · 读书笔记' },
+      { q: '规范与惯例', src: '模因与翻译规范 · 读书笔记' },
+      { q: '主体间性', src: '模因与翻译规范 · 读书笔记' },
+      { q: '描述性视角与规定性视角', src: '模因与翻译规范 · 读书笔记' },
+      { q: '显性翻译（House）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '隐性翻译（House）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '推荐规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '尾重', src: '模因与翻译规范 · 读书笔记' },
+      { q: '尾焦', src: '模因与翻译规范 · 读书笔记' },
+      { q: '象似性', src: '模因与翻译规范 · 读书笔记' },
+      { q: '译者责任（Hinds）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '定性期待性规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '定量期待性规范', src: '模因与翻译规范 · 读书笔记' },
+      { q: '赞助（patronage）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '诗学（poetics）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '话语分析（勒弗维尔）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '一般性翻译法则', src: '模因与翻译规范 · 读书笔记' },
+      { q: '干扰原则', src: '模因与翻译规范 · 读书笔记' },
+      { q: '日益标准化原则', src: '模因与翻译规范 · 读书笔记' },
+      { q: '显化原则', src: '模因与翻译规范 · 读书笔记' },
+      { q: '规范性法则', src: '模因与翻译规范 · 读书笔记' },
+      { q: '目的性解释', src: '模因与翻译规范 · 读书笔记' },
+      { q: '因果性解释', src: '模因与翻译规范 · 读书笔记' },
+      { q: '四因论', src: '模因与翻译规范 · 读书笔记' },
+      { q: '翻译策略', src: '模因与翻译规范 · 读书笔记' },
+      { q: '认知策略', src: '模因与翻译规范 · 读书笔记' },
+      { q: '社会策略', src: '模因与翻译规范 · 读书笔记' },
+      { q: '简化策略', src: '模因与翻译规范 · 读书笔记' },
+      { q: '达成策略', src: '模因与翻译规范 · 读书笔记' },
+      { q: 'Activities／Actions／Operations', src: '模因与翻译规范 · 读书笔记' },
+      { q: '问题导向', src: '模因与翻译规范 · 读书笔记' },
+      { q: '策略行为与无策略行为（洛歇尔）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '双重加工模式（基拉里）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '无标记加工与标记加工（加斯科莱宁）', src: '模因与翻译规范 · 读书笔记' },
+      { q: '意义阈值', src: '模因与翻译规范 · 读书笔记' },
+      { q: '曲线攀附（打安全牌）', src: '模因与翻译规范 · 读书笔记' },
     ]},
     { name: '问答·语言学', questions: [
       { q: '描述语音时常用的一般术语有哪些？(a) 声带相互靠拢时；(b) 声带分开时，分别怎么描述？', src: '2000 · 620' },
@@ -1207,6 +1444,20 @@
       { q: '安德鲁·切斯特曼认为，翻译是一种受制于规范的行为方式，且可以对其策略加以描述。请简述这一观点。', src: '2023 · 622' },
       { q: '模因论（memetics）与翻译的关系。', src: '2024 · 622' },
       { q: '什么是不可译性？用超模因（super-meme）来解释不可译性。', src: '2025 · 622' },
+      { q: '请结合模因论，说明「模因是翻译生存的机制」这一命题的含义。', src: '按 622 真题风格命题' },
+      { q: '什么是不可译性？请从「超模因」的角度解释不可译性的成因。', src: '按 622 真题风格命题' },
+      { q: '图里（G. Toury）把翻译规范分为哪几类？请分别简述其含义与作用。', src: '按 622 真题风格命题' },
+      { q: '切斯特曼（A. Chesterman）为什么说翻译策略是模因？请结合「模因池」说明策略的演化。', src: '按 622 真题风格命题' },
+      { q: '何谓「文本扁平化」？它与「显化原则」有何区别与联系？', src: '按 622 真题风格命题' },
+      { q: '请评述「等值」作为翻译超模因的争议，并说明形式等值、动态等值与绝对等值的差别。', src: '按 622 真题风格命题' },
+      { q: '奈达的「动态等值」与纽马克的「语义翻译」在翻译取向上的根本分歧是什么？', src: '按 622 真题风格命题' },
+      { q: '什么是「规范性法则」？它与「一般性翻译法则」是什么关系？', src: '按 622 真题风格命题' },
+      { q: '波普尔的「三个世界」理论如何解释翻译中意义的生产与传递？', src: '按 622 真题风格命题' },
+      { q: '勒弗维尔（A. Lefevere）认为制约翻译的因素有哪几种？请分别说明。', src: '按 622 真题风格命题' },
+      { q: '施莱尔马赫的翻译观如何体现「逻各斯」阶段的等值观？', src: '按 622 真题风格命题' },
+      { q: '为什么说「一般性翻译法则」具有描述性与可证伪性？请举例说明。', src: '按 622 真题风格命题' },
+      { q: '「翻译即操纵」这一隐喻包含哪几层意思？它对译者主体性有何启示？', src: '按 622 真题风格命题' },
+      { q: '请说明「显性翻译」与「隐性翻译」（House）的区别，并各举一例。', src: '按 622 真题风格命题' },
     ]}
   ];
 /* ==== BANK_END ==== */
@@ -1343,6 +1594,8 @@
   var overlayEl = $('overlay'), doneList = $('doneList'), doneN = $('doneN');
   var sheetX = $('sheetX'), resetBtn = $('resetBtn'), doneSum = $('doneSum');
   var undoBtn = $('undoBtn'), exBtn = $('exBtn'), exNEl = $('exNEl');
+  var titleEl = $('title'), paperEl = $('paper'), bankList = $('bankList');
+  var bankCount = $('bankCount'), restoreAllBtn = $('restoreAll'), newPaperBtn = $('newPaper');
 
   var CAP_COLORS = [
     ['#ff6b6b', '#ffd166'], ['#4f8cff', '#a5d8ff'], ['#34d399', '#a7f3d0'],
@@ -1570,6 +1823,23 @@
       srcEl.className = 'src';
       srcEl.textContent = '来源：' + q.src;
       cardEl.appendChild(srcEl);
+    }
+
+    if (q.hint) {
+      var hb = document.createElement('button');
+      hb.className = 'hintbtn';
+      hb.textContent = '看答题要点';
+      var hd = document.createElement('div');
+      hd.className = 'pqhint';
+      hd.style.display = 'none';
+      hd.textContent = q.hint;
+      hb.onclick = function () {
+        var open = hd.style.display === 'none';
+        hd.style.display = open ? '' : 'none';
+        hb.textContent = open ? '收起要点' : '看答题要点';
+      };
+      cardEl.appendChild(hb);
+      cardEl.appendChild(hd);
     }
 
     cardEl.appendChild(scoreBar(item));
@@ -1943,11 +2213,217 @@
     });
   }
 
+  /* ===================== 页签切换 ===================== */
+  var VIEW_TITLES = { pull: '扭蛋抽题', paper: '套题模拟', bank: '题库浏览' };
+
+  function showView(v) {
+    ['pull', 'paper', 'bank'].forEach(function (x) {
+      document.getElementById('view-' + x).hidden = (x !== v);
+    });
+    [].forEach.call(document.querySelectorAll('.tab'), function (b) {
+      b.classList.toggle('on', b.getAttribute('data-view') === v);
+    });
+    titleEl.textContent = VIEW_TITLES[v] || '扭蛋抽题';
+    pboxEl.style.display = (v === 'pull') ? '' : 'none';
+    if (v === 'bank') renderBank();
+    if (v === 'paper' && !paperItems.length) makePaper();
+  }
+
+  [].forEach.call(document.querySelectorAll('.tab'), function (b) {
+    b.addEventListener('click', function () { showView(b.getAttribute('data-view')); });
+  });
+
+  /* ===================== 套题 ===================== */
+  var PAPER_SPEC = [
+    { cat: '名解·文学',   n: 4, title: '一、名词解释 · 文学',   per: '2 分' },
+    { cat: '名解·语言学', n: 3, title: '二、名词解释 · 语言学', per: '2 分' },
+    { cat: '名解·翻译',   n: 3, title: '三、名词解释 · 翻译',   per: '2 分' },
+    { cat: '问答·文学',   n: 2, title: '四、问答题 · 文学',     per: '15 分' },
+    { cat: '问答·语言学', n: 2, title: '五、问答题 · 语言学',   per: '15 分' },
+    { cat: '问答·翻译',   n: 1, title: '六、问答题 · 翻译',     per: '10 分' }
+  ];
+  var paperItems = [];
+  var hintOpen = {};
+  var bankOpen = {};
+
+  function poolOf(cat) {
+    var c = null;
+    for (var i = 0; i < BANK.length; i++) if (BANK[i].name === cat) { c = BANK[i]; break; }
+    if (!c) return [];
+    return c.questions.map(function (q) {
+      return { q: q, cat: cat, key: cat + '|' + qtext(q) };
+    }).filter(function (x) { return !excluded[x.key]; });
+  }
+
+  function shufflePick(list, n, avoid) {
+    var pool = list.filter(function (x) { return !avoid[x.key]; });
+    for (var i = pool.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+    }
+    return pool.slice(0, n);
+  }
+
+  function makePaper() {
+    var used = {};
+    paperItems = [];
+    PAPER_SPEC.forEach(function (sp) {
+      shufflePick(poolOf(sp.cat), sp.n, used).forEach(function (x) {
+        used[x.key] = 1;
+        paperItems.push(x);
+      });
+    });
+    hintOpen = {};
+    renderPaper();
+  }
+
+  function renderPaper() {
+    if (!paperItems.length) {
+      paperEl.innerHTML = '<div class="pempty">还没生成套题<br>点上面的按钮来一套</div>';
+      return;
+    }
+    var idx = 0, html = '';
+    PAPER_SPEC.forEach(function (sp) {
+      var got = paperItems.slice(idx, idx + sp.n);
+      html += '<section class="psec"><h3><span>' + sp.title + '</span><em>' +
+              got.length + ' 题 · 每题 ' + sp.per + '</em></h3>';
+      got.forEach(function (it, k) {
+        var q = it.q;
+        var hint = (q && q.hint) ? q.hint : '';
+        var src = (q && q.src) ? q.src : '';
+        html += '<article class="pq">' +
+                  '<div class="pqno">' + (k + 1) + '</div>' +
+                  '<div class="pqbody">' +
+                    '<div class="pqtext">' + esc(qtext(q)) + '</div>' +
+                    (src ? '<div class="pqsrc">' + esc(src) + '</div>' : '') +
+                    (hint && hintOpen[idx] ? '<div class="pqhint">' + esc(hint) + '</div>' : '') +
+                  '</div>' +
+                  '<div class="pqacts">' +
+                    '<button class="pqre" data-i="' + idx + '">换一题</button>' +
+                    (hint ? '<button class="pqhi" data-i="' + idx + '">' +
+                            (hintOpen[idx] ? '收起' : '要点') + '</button>' : '') +
+                  '</div>' +
+                '</article>';
+        idx++;
+      });
+      html += '</section>';
+    });
+    paperEl.innerHTML = html;
+  }
+
+  newPaperBtn.addEventListener('click', makePaper);
+
+  paperEl.addEventListener('click', function (e) {
+    var el = e.target;
+    while (el && el !== paperEl && !(el.classList &&
+           (el.classList.contains('pqre') || el.classList.contains('pqhi')))) {
+      el = el.parentNode;
+    }
+    if (!el || el === paperEl) return;
+    var i = parseInt(el.getAttribute('data-i'), 10);
+    if (isNaN(i) || !paperItems[i]) return;
+
+    if (el.classList.contains('pqhi')) {
+      hintOpen[i] = !hintOpen[i];
+      renderPaper();
+      return;
+    }
+
+    var used = {};
+    paperItems.forEach(function (x, j) { if (j !== i) used[x.key] = 1; });
+    used[paperItems[i].key] = 1;          // 别换回同一题
+    var cand = shufflePick(poolOf(paperItems[i].cat), 1, used);
+    if (!cand.length) { toast('这个分类已经没有可换的题了'); return; }
+    paperItems[i] = cand[0];
+    delete hintOpen[i];
+    renderPaper();
+  });
+
+  /* ===================== 题库浏览 ===================== */
+  function renderBank() {
+    var live = 0, total = 0, html = '';
+    BANK.forEach(function (c) {
+      var arr = c.questions, alive = 0;
+      total += arr.length;
+      arr.forEach(function (q) { if (!excluded[c.name + '|' + qtext(q)]) alive++; });
+      live += alive;
+      var open = !!bankOpen[c.name];
+      html += '<section class="bsec">' +
+                '<button class="bhead" data-cat="' + esc(c.name) + '">' +
+                  '<span>' + (open ? '▾ ' : '▸ ') + esc(c.name) + '</span>' +
+                  '<em>' + alive + ' / ' + arr.length + '</em>' +
+                '</button>' +
+                (open ? '<div class="blist">' + arr.map(function (q) {
+                  var k = c.name + '|' + qtext(q);
+                  var off = !!excluded[k];
+                  var t = qtext(q);
+                  if (t.length > 64) t = t.slice(0, 62) + '…';
+                  return '<div class="brow' + (off ? ' off' : '') + '">' +
+                           '<span class="bt">' + esc(t) + '</span>' +
+                           '<button class="bdel' + (off ? ' on' : '') + '" data-k="' + esc(k) + '">' +
+                             (off ? '恢复' : '删除') + '</button>' +
+                         '</div>';
+                }).join('') + '</div>' : '') +
+              '</section>';
+    });
+    bankList.innerHTML = html;
+    bankCount.textContent = '可用 ' + live + ' / 共 ' + total + ' 题';
+    restoreAllBtn.style.display = Object.keys(excluded).length ? '' : 'none';
+  }
+
+  bankList.addEventListener('click', function (e) {
+    var el = e.target;
+    while (el && el !== bankList && !(el.classList &&
+           (el.classList.contains('bhead') || el.classList.contains('bdel')))) {
+      el = el.parentNode;
+    }
+    if (!el || el === bankList) return;
+
+    if (el.classList.contains('bhead')) {
+      var cat = el.getAttribute('data-cat');
+      bankOpen[cat] = !bankOpen[cat];
+      renderBank();
+      return;
+    }
+    var k = el.getAttribute('data-k');
+    if (excluded[k]) delete excluded[k]; else excluded[k] = 1;
+    saveExcluded();
+    paintBox();
+    paintMeta();
+    renderBank();
+  });
+
+  restoreAllBtn.addEventListener('click', function () {
+    var n = Object.keys(excluded).length;
+    if (!n) return;
+    if (!confirm('恢复全部 ' + n + ' 道已删除的题？')) return;
+    excluded = {};
+    saveExcluded();
+    paintBox();
+    paintMeta();
+    renderBank();
+  });
+
+  /* 轻提示 */
+  var toastEl = null;
+  function toast(msg) {
+    if (!toastEl) {
+      toastEl = document.createElement('div');
+      toastEl.className = 'toast';
+      document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { toastEl.classList.remove('on'); }, 1700);
+  }
+
   loadExcluded();
   buildChips();
   loadDone();
   paintBox();
   paintMeta();
+  showView('pull');
 })();
 </script>
 </body>
