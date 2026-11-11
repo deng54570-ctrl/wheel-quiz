@@ -2247,12 +2247,12 @@
      分数允许 0.5 这种小数。 */
   function fullOf(cat) {
     cat = cat || '';
-    if (cat.indexOf('中西') === 0) return 5;       // 中西名词解释：5 分制
+    if (cat.indexOf('中西') === 0) return 10;      // 中西名词解释：10 分制
     return /^名解/.test(cat) ? 2 : 15;
   }
   function stepsFor(cat) {
     cat = cat || '';
-    if (cat.indexOf('中西') === 0) return [0, 1, 2, 3, 4, 5];
+    if (cat.indexOf('中西') === 0) return [0, 2, 4, 6, 8, 10];
     return /^名解/.test(cat) ? [0, 0.5, 1, 1.5, 2] : [0, 3, 6, 9, 12, 15];
   }
   function fmtNum(v) {
