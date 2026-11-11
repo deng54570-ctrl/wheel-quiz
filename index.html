@@ -478,6 +478,29 @@
   .pqre:active,.pqhi:active{box-shadow:inset -2px -2px 0 #9fadc8, inset 2px 2px 0 #55617a}
   .pempty{text-align:center;color:#a8a8a8;font-size:13px;padding:40px 0;line-height:2}
 
+  /* ── 套题计分 ── */
+  .ptotal{
+    margin-top:10px;padding:9px 12px;text-align:center;
+    background:#241f19;border:3px solid var(--edge);
+    color:#e9e9e9;font-size:12px;font-weight:700;letter-spacing:.3px;
+    text-shadow:2px 2px 0 rgba(0,0,0,.55);
+  }
+  .ptotal b{color:var(--gold)}
+  .pscore{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px}
+  .psb{
+    flex:1 1 0;min-width:32px;height:26px;padding:0;
+    border:2px solid var(--edge);background:var(--slot);color:#1f1f1f;
+    font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+    box-shadow:inset 2px 2px 0 #5f5f5f, inset -2px -2px 0 #a9a9a9;
+  }
+  .psb:active{box-shadow:inset -2px -2px 0 #5f5f5f, inset 2px 2px 0 #a9a9a9}
+  .psb.on{background:var(--green);color:#fff;
+          box-shadow:inset 2px 2px 0 #7cc45c, inset -2px -2px 0 #2f6b20}
+  .psc{
+    flex:0 0 auto;padding:0 9px;background:#7d8ba8;color:#fff;
+    box-shadow:inset 2px 2px 0 #9fadc8, inset -2px -2px 0 #55617a;
+  }
+
   /* ── 题库 ── */
   .bbar{
     width:100%;max-width:360px;display:flex;justify-content:space-between;
@@ -641,6 +664,7 @@
 <div class="view" id="view-paper" hidden>
   <div class="pbar">
     <button class="pbtn" id="newPaper">生成一套题</button>
+    <div class="ptotal" id="ptotal"></div>
   </div>
   <div id="paper"></div>
 </div>
@@ -1963,6 +1987,7 @@
   var bankCount = $('bankCount'), restoreAllBtn = $('restoreAll'), newPaperBtn = $('newPaper');
   var heartsEl = $('hearts'), xpFillEl = $('xpfill'), xpLabEl = $('xplab');
   var bankModeBtn = $('bankModeBtn'), bdEl = $('bd'), bdQ = $('bdQ'), bdS = $('bdS');
+  var pTotalEl = $('ptotal');
   var bdBtn = $('bdBtn'), bdX = $('bdX'), bdHead = $('bdHead');
   var bankMode = 'grid', bdKey = null;
 
@@ -2819,7 +2844,7 @@
     titleEl.textContent = VIEW_TITLES[v] || '扭蛋抽题';
     pboxEl.style.display = (v === 'pull') ? '' : 'none';
     if (v === 'bank') renderBank();
-    if (v === 'paper' && !paperItems.length) makePaper();
+    if (v === 'paper') { if (!paperItems.length) makePaper(); else renderPaper(); }
   }
 
   [].forEach.call(document.querySelectorAll('.tab'), function (b) {
@@ -2867,12 +2892,15 @@
       });
     });
     hintOpen = {};
+    savePaper();
     renderPaper();
   }
 
   function renderPaper() {
+    var keepY = window.pageYOffset || document.documentElement.scrollTop || 0;
     if (!paperItems.length) {
       paperEl.innerHTML = '<div class="pempty">还没生成套题<br>点上面的按钮来一套</div>';
+      paintPaperTotal();
       return;
     }
     var idx = 0, html = '';
@@ -2890,6 +2918,13 @@
                     '<div class="pqtext">' + esc(qtext(q)) + '</div>' +
                     (src ? '<div class="pqsrc">' + esc(src) + '</div>' : '') +
                     (hint && hintOpen[idx] ? '<div class="pqhint">' + esc(hint) + '</div>' : '') +
+                    '<div class="pscore" data-i="' + idx + '">' +
+                      stepsFor(it.cat).map(function (v) {
+                        return '<button class="psb' + (it.score === v ? ' on' : '') +
+                               '" data-i="' + idx + '" data-v="' + v + '">' + fmtNum(v) + '</button>';
+                      }).join('') +
+                      '<button class="psb psc" data-i="' + idx + '">自己填</button>' +
+                    '</div>' +
                   '</div>' +
                   '<div class="pqacts">' +
                     '<button class="pqre" data-i="' + idx + '">换一题</button>' +
@@ -2902,6 +2937,64 @@
       html += '</section>';
     });
     paperEl.innerHTML = html;
+    paintPaperTotal();
+    if (keepY) window.scrollTo(0, keepY);
+  }
+
+  /* ── 套题计分 ── */
+  function paintPaperTotal() {
+    if (!pTotalEl) return;
+    if (!paperItems.length) { pTotalEl.textContent = ''; return; }
+    var max = PAPER_SPEC.reduce(function (a, sp) {
+      return a + sp.n * parseFloat(sp.per);
+    }, 0);
+    var got = 0, n = 0;
+    paperItems.forEach(function (it) {
+      if (typeof it.score === 'number') { got += it.score; n++; }
+    });
+    pTotalEl.innerHTML = '本卷已得 <b>' + (Math.round(got * 10) / 10) + '</b> / ' + max +
+                         ' 分　·　已评 <b>' + n + '</b> / ' + paperItems.length + ' 题';
+  }
+
+  function setPaperScore(i, v) {
+    if (!paperItems[i]) return;
+    paperItems[i].score = v;
+    savePaper();
+    // 只更新这一行，不整体重绘
+    var row = paperEl.querySelector('.pscore[data-i="' + i + '"]');
+    if (row) {
+      [].forEach.call(row.querySelectorAll('.psb[data-v]'), function (b) {
+        b.classList.toggle('on', parseFloat(b.getAttribute('data-v')) === v);
+      });
+    }
+    paintPaperTotal();
+  }
+
+  function askPaperScore(i) {
+    var cur = paperItems[i] ? paperItems[i].score : null;
+    var v = window.prompt('填这一题的分数（非负整数）', cur == null ? '' : String(cur));
+    if (v === null) return;
+    v = String(v).replace(/[^0-9.]/g, '');
+    var n = parseFloat(v);
+    if (v === '' || isNaN(n)) return;
+    setPaperScore(i, Math.max(0, Math.round(n * 10) / 10));
+  }
+
+  function savePaper() {
+    try {
+      localStorage.setItem('gachaPaper.v1', JSON.stringify({ items: paperItems, t: Date.now() }));
+    } catch (e) {}
+  }
+
+  function loadPaper() {
+    try {
+      var raw = JSON.parse(localStorage.getItem('gachaPaper.v1') || 'null');
+      if (raw && raw.items instanceof Array && raw.items.length) {
+        paperItems = raw.items;
+        return true;
+      }
+    } catch (e) {}
+    return false;
   }
 
   newPaperBtn.addEventListener('click', makePaper);
@@ -2909,12 +3002,19 @@
   paperEl.addEventListener('click', function (e) {
     var el = e.target;
     while (el && el !== paperEl && !(el.classList &&
-           (el.classList.contains('pqre') || el.classList.contains('pqhi')))) {
+           (el.classList.contains('pqre') || el.classList.contains('pqhi') ||
+            el.classList.contains('psb')))) {
       el = el.parentNode;
     }
     if (!el || el === paperEl) return;
     var i = parseInt(el.getAttribute('data-i'), 10);
     if (isNaN(i) || !paperItems[i]) return;
+
+    if (el.classList.contains('psb')) {
+      if (el.classList.contains('psc')) askPaperScore(i);
+      else setPaperScore(i, parseFloat(el.getAttribute('data-v')));
+      return;
+    }
 
     if (el.classList.contains('pqhi')) {
       hintOpen[i] = !hintOpen[i];
@@ -2928,7 +3028,9 @@
     var cand = shufflePick(poolOf(paperItems[i].cat), 1, used);
     if (!cand.length) { toast('这个分类已经没有可换的题了'); return; }
     paperItems[i] = cand[0];
+    delete paperItems[i].score;
     delete hintOpen[i];
+    savePaper();
     renderPaper();
   });
 
@@ -3110,6 +3212,7 @@
   }
 
   loadExcluded();
+  loadPaper();
   buildChips();
   loadDone();
   paintBox();
