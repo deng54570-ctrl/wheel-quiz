@@ -1985,23 +1985,122 @@
   var knobAngle = 0;           // 旋钮累加角度：每次往前转一整圈，不会回弹
 
   /* ===================== 玻璃球里的小扭蛋 ===================== */
+  /* ── 玻璃罩里的方块：真实物理（重力 + 碰撞 + 机器微震）── */
+  var domeBalls = [], domeW = 0, domeH = 0, domeLast = 0, domeActive = true;
+
   (function fillDome() {
     var colors = ['#ff6b6b','#ffd166','#4f8cff','#34d399','#f472b6','#a78bfa','#22d3ee','#fb923c','#a3e635'];
     for (var i = 0; i < 46; i++) {
-      var b = document.createElement('span');
-      var r = 8 + Math.random() * 8;
-      var ang = Math.random() * Math.PI * 2;
-      var rad = Math.sqrt(Math.random()) * 38;
-      b.style.width = b.style.height = (r * 2).toFixed(0) + 'px';
-      b.style.left = (50 + Math.cos(ang) * rad).toFixed(2) + '%';
-      b.style.top = (50 + Math.sin(ang) * rad).toFixed(2) + '%';
-      b.style.transform = 'translate(-50%,-50%)';
-      b.style.background = 'radial-gradient(circle at 34% 30%, rgba(255,255,255,.5), transparent 55%),' +
+      var el = document.createElement('span');
+      var r = 7 + Math.random() * 7;
+      el.style.width = el.style.height = (r * 2).toFixed(0) + 'px';
+      el.style.left = '0px'; el.style.top = '0px';
+      el.style.background = 'radial-gradient(circle at 34% 30%, rgba(255,255,255,.5), transparent 55%),' +
                            colors[i % colors.length];
-      b.style.opacity = (0.75 + Math.random() * 0.25).toFixed(2);
-      ballsBox.appendChild(b);
+      el.style.opacity = (0.78 + Math.random() * 0.22).toFixed(2);
+      ballsBox.appendChild(el);
+      domeBalls.push({ el: el, r: r, x: 0, y: 0, vx: 0, vy: 0 });
     }
   })();
+
+  function domeReset() {
+    domeW = ballsBox.clientWidth;
+    domeH = ballsBox.clientHeight;
+    if (!domeW || !domeH) { domeW = 182; domeH = 182; }
+    domeBalls.forEach(function (b) {
+      b.x = b.r + Math.random() * Math.max(1, domeW - b.r * 2);
+      b.y = b.r + Math.random() * Math.max(1, domeH * 0.8);
+      b.vx = (Math.random() - 0.5) * 80;
+      b.vy = (Math.random() - 0.5) * 80;
+    });
+  }
+
+  function domeKick(power) {
+    domeBalls.forEach(function (b) {
+      b.vx += (Math.random() - 0.5) * power;
+      b.vy -= Math.random() * power * 0.8;
+    });
+  }
+
+  function domeStep(dt) {
+    var W = domeW, H = domeH;
+    if (!W || !H) return;
+    var G = 950, REST = 0.55, i, j;
+
+    for (i = 0; i < domeBalls.length; i++) {
+      var b = domeBalls[i];
+      b.vy += G * dt;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * REST; }
+      if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * REST; }
+      if (b.y + b.r > H) {
+        b.y = H - b.r;
+        b.vy = -Math.abs(b.vy) * REST;
+        if (Math.abs(b.vy) < 30) b.vy = 0;
+        b.vx *= 0.9;
+      }
+      if (b.y - b.r < 0) { b.y = b.r; b.vy = Math.abs(b.vy) * REST; }
+    }
+
+    // 两两分离（按圆近似，方块视觉上够用）
+    for (i = 0; i < domeBalls.length; i++) {
+      for (j = i + 1; j < domeBalls.length; j++) {
+        var a = domeBalls[i], c = domeBalls[j];
+        var dx = c.x - a.x, dy = c.y - a.y;
+        var d2 = dx * dx + dy * dy;
+        var minD = a.r + c.r;
+        if (d2 > 0.01 && d2 < minD * minD) {
+          var d = Math.sqrt(d2);
+          var nx = dx / d, ny = dy / d;
+          var ov = (minD - d) * 0.5;
+          a.x -= nx * ov; a.y -= ny * ov;
+          c.x += nx * ov; c.y += ny * ov;
+          var vn = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny;
+          if (vn < 0) {
+            var imp = -(1 + REST) * vn * 0.5;
+            a.vx -= imp * nx; a.vy -= imp * ny;
+            c.vx += imp * nx; c.vy += imp * ny;
+          }
+        }
+      }
+    }
+
+    // 机器一直在轻微震动：随机推一下某个方块
+    if (Math.random() < 0.09) {
+      var k = domeBalls[(Math.random() * domeBalls.length) | 0];
+      k.vx += (Math.random() - 0.5) * 130;
+      k.vy -= Math.random() * 100;
+    }
+  }
+
+  function domeRender() {
+    for (var i = 0; i < domeBalls.length; i++) {
+      var b = domeBalls[i];
+      b.el.style.transform = 'translate(' + (b.x - b.r).toFixed(1) + 'px,' + (b.y - b.r).toFixed(1) + 'px)';
+    }
+  }
+
+  function domeLoop(now) {
+    requestAnimationFrame(domeLoop);
+    if (document.hidden || !domeActive) { domeLast = 0; return; }
+    var dt = domeLast ? Math.min(0.033, (now - domeLast) / 1000) : 0.016;
+    domeLast = now;
+    domeStep(dt);
+    domeRender();
+  }
+
+  domeReset();
+  domeRender();
+  requestAnimationFrame(domeLoop);
+
+  window.addEventListener('resize', function () {
+    domeW = ballsBox.clientWidth; domeH = ballsBox.clientHeight;
+    domeBalls.forEach(function (b) {
+      b.x = Math.min(Math.max(b.r, b.x), Math.max(b.r, domeW - b.r));
+      b.y = Math.min(Math.max(b.r, b.y), Math.max(b.r, domeH - b.r));
+    });
+  });
 
   /* ===================== 抽题范围按钮 ===================== */
   function buildChips() {
@@ -2515,6 +2614,7 @@
     knob.style.transform = 'rotate(' + knobAngle + 'deg)';
     Sound.turn();
     dome.classList.add('jiggle');
+    domeKick(760);
     setTimeout(function () { dome.classList.remove('jiggle'); }, 1050);
 
     // 2) 旋钮转完 → 落蛋
@@ -2715,6 +2815,7 @@
     [].forEach.call(document.querySelectorAll('.tab'), function (b) {
       b.classList.toggle('on', b.getAttribute('data-view') === v);
     });
+    domeActive = (v === 'pull');
     titleEl.textContent = VIEW_TITLES[v] || '扭蛋抽题';
     pboxEl.style.display = (v === 'pull') ? '' : 'none';
     if (v === 'bank') renderBank();
