@@ -254,6 +254,12 @@
     text-shadow:1px 1px 0 rgba(0,0,0,.45);
   }
   .q{font-size:16px;line-height:1.75;white-space:pre-wrap;word-break:break-word;color:#2f2f2f}
+  .gitem{
+    display:flex;gap:8px;padding:9px 10px;margin-top:7px;
+    background:rgba(0,0,0,.045);border:2px solid #b0b0b0;
+    font-size:14.5px;line-height:1.65;color:#232323;
+  }
+  .gitem b{color:#1f4fa8;flex:0 0 auto;font-weight:700}
   .opts{list-style:none;padding:0;margin:12px 0 0}
   .opts li{
     padding:8px 10px;margin-top:7px;font-size:14.5px;line-height:1.6;
@@ -2028,8 +2034,7 @@
     try { done = JSON.parse(localStorage.getItem(STORE) || '[]') || []; }
     catch (e) { done = []; }
     if (!(done instanceof Array)) done = [];
-    doneMap = {};
-    done.forEach(function (d) { if (d && d.key) doneMap[d.key] = 1; });
+    rebuildMap();
   }
   function saveDone() {
     try { localStorage.setItem(STORE, JSON.stringify(done)); } catch (e) {}
@@ -2078,6 +2083,70 @@
     paintMeta();
   }
 
+  /* ── 一次三个词（中西名词解释） ── */
+  function makeGroupRecord(items) {
+    return {
+      key: '中西组|' + items.map(function (x) { return x.key; }).join('||'),
+      cat: '中西名词解释',
+      q: { q: items.map(function (x) { return qtext(x.q); }).join(' ／ '),
+           src: '中西 · 三题一组（每题 10 分，共 30 分）' },
+      t: Date.now(),
+      full: 30,
+      steps: [0, 6, 12, 18, 24, 30],
+      group: items.map(function (x) { return x.key; })
+    };
+  }
+
+  function markGroup(rec) {
+    var dup = done.some(function (d) { return d.key === rec.key; });
+    if (dup) return;
+    done.push(rec);
+    rec.group.forEach(function (k) { doneMap[k] = 1; });
+    doneMap[rec.key] = 1;
+    saveDone();
+    paintBox();
+    paintMeta();
+  }
+
+  function drawGroup(n) {
+    var fresh = leftInPool();
+    if (!fresh.length) return [];
+    for (var i = fresh.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = fresh[i]; fresh[i] = fresh[j]; fresh[j] = t;
+    }
+    return fresh.slice(0, Math.min(n, fresh.length));
+  }
+
+  function renderGroup(items, rec) {
+    cardEl.innerHTML = '';
+
+    var tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = '本题来自：中西名词解释 · 三题一组';
+    cardEl.appendChild(tag);
+
+    items.forEach(function (it, i) {
+      var row = document.createElement('div');
+      row.className = 'gitem';
+      var b = document.createElement('b');
+      b.textContent = ['①', '②', '③'][i] || (i + 1) + '.';
+      row.appendChild(b);
+      row.appendChild(document.createTextNode(qtext(it.q)));
+      cardEl.appendChild(row);
+    });
+
+    var srcEl = document.createElement('div');
+    srcEl.className = 'src';
+    srcEl.textContent = '来源：' + (rec.q && rec.q.src ? rec.q.src : '中西');
+    cardEl.appendChild(srcEl);
+
+    cardEl.appendChild(scoreBar({ cat: rec.cat, key: rec.key }, rec.full, rec.steps));
+
+    cardEl.classList.add('show');
+    try { cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  }
+
   function paintMeta() {
     var all = candidates();
     var left = all.filter(function (x) { return !doneMap[x.key]; }).length;
@@ -2097,7 +2166,7 @@
 
     var scored = done.filter(function (d) { return typeof d.score === 'number'; });
     var rate = 0;
-    scored.forEach(function (d) { rate += d.score / fullOf(d.cat); });
+    scored.forEach(function (d) { rate += d.score / fullOfRec(d); });
     rate = scored.length ? rate / scored.length : 0;
 
     var units = rate * 10;
@@ -2126,7 +2195,7 @@
     doneN.textContent = done.length;
     var scored = done.filter(function (d) { return typeof d.score === 'number'; });
     var rate = 0;
-    scored.forEach(function (d) { rate += d.score / fullOf(d.cat); });
+    scored.forEach(function (d) { rate += d.score / fullOfRec(d); });
     doneSum.textContent = scored.length
       ? ' · 得分率 ' + Math.round(rate / scored.length * 100) + '%（已评 ' + scored.length + ' 题）'
       : ' · 还没打分';
@@ -2148,15 +2217,15 @@
       html += '<div class="ditem">' +
                 '<div class="dtop"><span class="dtag">' + esc(d.cat) + '</span>' +
                 '<span class="dtime">' + hm + '</span>' +
-                '<span class="dscore ' + scoreClass(d.score, fullOf(d.cat)) + '">' +
+                '<span class="dscore ' + scoreClass(d.score, fullOfRec(d)) + '">' +
                 (d.score === undefined || d.score === null
                   ? '未评分'
-                  : (d.score > fullOf(d.cat)
-                      ? fmtNum(d.score) + ' 分'          // 旧版 5 分制留下的分
-                      : fmtNum(d.score) + ' / ' + fullOf(d.cat))) +
+                  : (d.score > fullOfRec(d)
+                      ? fmtNum(d.score) + ' 分'
+                      : fmtNum(d.score) + ' / ' + fullOfRec(d))) +
                 '</span></div>' +
                 '<div class="dscores">' +
-                stepsFor(d.cat).map(function (v) {
+                stepsOfRec(d).map(function (v) {
                   return '<button class="dsb' + (d.score === v ? ' on' : '') +
                          '" data-i="' + i + '" data-v="' + v + '">' + fmtNum(v) + '</button>';
                 }).join('') +
@@ -2260,18 +2329,20 @@
     return String(Math.round(Number(v) * 10) / 10);
   }
 
-  function scoreBar(item) {
+  function scoreBar(item, full, steps) {
+    full = full || fullOf(item.cat);
+    steps = steps || stepsFor(item.cat);
     var wrap = document.createElement('div');
     wrap.className = 'scorebar';
 
     var lab = document.createElement('span');
     lab.className = 'scorelab';
-    lab.textContent = '这题给自己打几分？（满分 ' + fullOf(item.cat) + ' 分）';
+    lab.textContent = '这题给自己打几分？（满分 ' + full + ' 分）';
     wrap.appendChild(lab);
 
     var row = document.createElement('div');
     row.className = 'scorebtns';
-    stepsFor(item.cat).forEach(function (v) {
+    steps.forEach(function (v) {
       var b = document.createElement('button');
       b.className = 'sbtn';
       b.setAttribute('data-v', v);
@@ -2328,7 +2399,7 @@
     }
     var tip = cardEl.querySelector('.scoretip');
     if (tip) {
-      var full = fullOf(rec.cat), ratio = v / full;
+      var full = fullOfRec(rec), ratio = v / full;
       tip.textContent = '已记录 ' + fmtNum(v) + ' / ' + full + ' 分' +
         (ratio >= 0.8 ? ' · 记得很牢' : ratio >= 0.5 ? ' · 还要再练' : ' · 基本没记住');
     }
@@ -2414,14 +2485,25 @@
   /* ===================== 整个开奖流程 ===================== */
   function start() {
     if (busy) return;
-    var item = drawOne();
-    if (!item) {
+
+    var isGroup = (selectedCat === '中西名词解释');
+    var items, gRec = null;
+
+    if (isGroup) {
+      items = drawGroup(3);
+      if (items.length) gRec = makeGroupRecord(items);
+    } else {
+      var one = drawOne();
+      items = one ? [one] : [];
+    }
+
+    if (!items.length) {
       hintEl.textContent = '这个范围的题都抽完啦 —— 点右下角魔盒重新开始';
       return;
     }
 
     busy = true;
-    pendingItem = item;
+    pendingItem = isGroup ? gRec : items[0];
     Sound.unlock();
     knob.disabled = true;
     cardEl.classList.remove('show');
@@ -2456,8 +2538,13 @@
 
           // 5) 揭晓题目
           setTimeout(function () {
-            renderResult(pendingItem);
-            markDone(pendingItem);
+            if (isGroup) {
+              renderGroup(items, gRec);
+              markGroup(gRec);
+            } else {
+              renderResult(items[0]);
+              markDone(items[0]);
+            }
             hintEl.textContent = '再转一次旋钮';
             knob.disabled = false;
             busy = false;
@@ -2519,8 +2606,15 @@
   }
   function rebuildMap() {
     doneMap = {};
-    done.forEach(function (d) { doneMap[d.key] = 1; });
+    done.forEach(function (d) {
+      if (d.key) doneMap[d.key] = 1;
+      if (d.group) d.group.forEach(function (k) { doneMap[k] = 1; });
+    });
   }
+
+  /* 组题（一次三个词）有自己的满分 */
+  function fullOfRec(d) { return d.full || fullOf(d.cat); }
+  function stepsOfRec(d) { return d.steps || stepsFor(d.cat); }
 
   /* 魔盒里直接打分 */
   doneList.addEventListener('click', function (e) {
